@@ -1,0 +1,7 @@
+0x00000000	rt_wdset_stretch	/usr/src/rtai/magma/base/wd/rtai_wd	EXPORT_SYMBOL
+0x00000000	rt_wdset_gracediv	/usr/src/rtai/magma/base/wd/rtai_wd	EXPORT_SYMBOL
+0x00000000	rt_wdset_slip	/usr/src/rtai/magma/base/wd/rtai_wd	EXPORT_SYMBOL
+0x00000000	rt_wdset_limit	/usr/src/rtai/magma/base/wd/rtai_wd	EXPORT_SYMBOL
+0x00000000	rt_wdset_safety	/usr/src/rtai/magma/base/wd/rtai_wd	EXPORT_SYMBOL
+0x00000000	rt_wdset_policy	/usr/src/rtai/magma/base/wd/rtai_wd	EXPORT_SYMBOL
+0x00000000	rt_wdset_grace	/usr/src/rtai/magma/base/wd/rtai_wd	EXPORT_SYMBOL

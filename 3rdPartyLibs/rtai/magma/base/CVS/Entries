@@ -1,0 +1,16 @@
+/GNUmakefile.am/1.2/Sun Sep 17 12:52:21 2006//
+/GNUmakefile.in/1.12/Tue May 22 13:30:52 2007//
+D/arch////
+D/config////
+D/include////
+D/ipc////
+D/leds////
+D/malloc////
+D/math////
+D/posix////
+D/sched////
+D/scripts////
+D/tasklets////
+D/trace////
+D/usi////
+D/wd////

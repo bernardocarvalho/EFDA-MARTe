@@ -1,0 +1,18 @@
+/ChangeLog/1.348/Wed Oct 24 15:20:11 2007//
+/GNUmakefile.am/1.2/Wed Mar 15 17:00:32 2006//
+/GNUmakefile.in/1.12/Tue May 22 13:30:51 2007//
+/README.INSTALL/1.5/Sun Sep 17 14:55:26 2006//
+/README.ISOLCPUS/1.1/Thu Dec 29 01:12:44 2005//
+/README.LXRT_EXTS_IN_USE/1.4/Thu Mar 30 13:00:56 2006//
+/README.SMI/1.1/Thu Dec 29 01:12:44 2005//
+/README.TRIOSS/1.6/Wed Nov  9 07:58:05 2005//
+/aclocal.m4/1.5/Wed Feb 28 15:47:07 2007//
+/configure/1.30/Tue May 22 13:30:51 2007//
+/configure.in/1.31/Tue May 22 13:30:51 2007//
+/makefile/1.2/Thu Dec 29 01:12:45 2005//
+/rtai_config.h.in/1.14/Thu Mar  1 09:03:52 2007//
+D/addons////
+D/base////
+D/doc////
+D/rtai-lab////
+D/testsuite////
