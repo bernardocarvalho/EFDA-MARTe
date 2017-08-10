@@ -1,0 +1,17 @@
+/BaseLib3S.a
+/BasicTypesRegistration.o
+/CDB.o
+/CDBCInterface.o
+/CDBGroupNode.o
+/CDBLinkNode.o
+/CDBNode.o
+/CDBNodeRef.o
+/CDBOS.o
+/CDBObjectNode.o
+/CDBStringDataNode.o
+/EAFile.o
+/LexicalAnalyzer.o
+/ObjectIOTools.o
+/ObjectRegistryTools.o
+/Parser.o
+/StreamConfigurationDataBase.o

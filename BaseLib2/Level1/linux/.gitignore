@@ -1,0 +1,11 @@
+/BaseLib1S.a
+/BasicTypes.o
+/GCNamedObject.o
+/GCRCItem.o
+/GCReference.o
+/GCReferenceContainer.o
+/GarbageCollectable.o
+/GlobalObjectDataBase.o
+/Object.o
+/ObjectRegistryDataBase.o
+/ObjectRegistryItem.o

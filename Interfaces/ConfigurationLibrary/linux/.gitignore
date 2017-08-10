@@ -1,0 +1,13 @@
+/ConfigurableObject.o
+/ConfigurableObjectProxy.o
+/ConfigurableProperty.o
+/ConfigurationLibrary.o
+/ConfigurationLibrary.so
+/ConfigurationReply.o
+/ConfigurationRequest.o
+/GenericTestGAM.gam
+/GenericTestGAM.o
+/GenericTestModule.o
+/MessageSender.ex
+/libConfigurationLibrary.so
+/main.o

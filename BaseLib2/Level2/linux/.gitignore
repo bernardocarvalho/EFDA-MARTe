@@ -1,0 +1,15 @@
+/ATMSocket.o
+/BaseLib2S.a
+/BufferedStream.o
+/CDBDataTypes.o
+/CStreamBuffering.o
+/Console.o
+/FString.o
+/File.o
+/GCNString.o
+/RemoteConsole.o
+/Serial.o
+/StreamAttributes.o
+/Streamable.o
+/TCPSocket.o
+/UDPSocket.o

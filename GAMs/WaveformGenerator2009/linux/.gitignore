@@ -1,0 +1,13 @@
+/TriggerObj.o
+/WaveformClassIncrement.o
+/WaveformClassOpt.o
+/WaveformClassPoints.o
+/WaveformClassRandom.o
+/WaveformClassSequencer.o
+/WaveformClassSine.o
+/WaveformClassSquare.o
+/WaveformClassTime.o
+/WaveformClassTriangular.o
+/WaveformGenerator.gam
+/WaveformGenericClass.o
+/WaveformPeriodicClass.o
