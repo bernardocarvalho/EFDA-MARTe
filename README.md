@@ -15,6 +15,7 @@ To compile all, run:
 ```
 ### Extra compilations
 You nay need to compile manually the modules:
+    
     * IOGAMs/GenericTimerDriver
     * MARTe/MARTeSupportLib
     * Interfaces/HTTP/CFGUploader
@@ -28,6 +29,7 @@ You nay need to compile manually the modules:
     * GAMs/WaterTank
     * IOGAMs
     * IOGAMs/GenericTimerDriver
+
 Got each folder and run:
 
 ```bash
@@ -45,3 +47,5 @@ make -f Makefile.linux
  cd Examples/WaterTank
 ./MARTe-WaterTank.sh MARTe-WaterTank.cfg
 ```
+
+    1. An HTTP Server will run. Point your browser to http://localhost:8084
