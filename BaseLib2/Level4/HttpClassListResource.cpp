@@ -102,7 +102,7 @@ bool HttpClassListResource::ProcessHttpMessage(HttpStream &hStream){
             if (p->nOfAllocatedObjects > 0){
                 hmStream.Printf("A");
             }
-            if (p->structure > 0){
+            if (p->structure != NULL){
                 hmStream.Printf("S");
             }
 
@@ -134,7 +134,7 @@ bool HttpClassListResource::ProcessHttpMessage(HttpStream &hStream){
             }
             hmStream.SSPrintf(HtmlTagStreamMode,"/TD");
             hmStream.SSPrintf(HtmlTagStreamMode,"TD");
-            if (p->structure > 0){
+            if (p->structure != NULL){
                 if (strcmp(className.Buffer(),p->ClassName())==0){
                     hmStream.SSPrintf(HtmlTagStreamMode,"TABLE");
 

@@ -23,6 +23,8 @@
 #
 #############################################################
 
+JAVA_HOME = /opt/jdk1.8.0_231
+
 CLASSPATH = .
 
 #JFLAGS = -classpath $(CLASSPATH) -target 1.7
@@ -30,7 +32,7 @@ JFLAGS = -classpath $(CLASSPATH)
 JCFLAGS =
 JRFLAGS =
 BUILD_DIR = build
-JAVAC = javac $(JFLAGS) -d $(BUILD_DIR)
+JAVAC = $(JAVA_HOME)/bin/javac $(JFLAGS) -d $(BUILD_DIR)
 
 .SUFFIXES : .java .class
 
