@@ -24,6 +24,27 @@
 
 #ifndef PCI_ATCA_ADC_H_
 #define PCI_ATCA_ADC_H_
+
+/*
+* Macros to help debugging
+*/
+
+#undef PDEBUG             /* undef it, just in case */
+#ifdef SCULLV_DEBUG
+#  ifdef __KERNEL__
+     /* This one if debugging is on, and kernel space */
+#    define PDEBUG(fmt, args...) printk( KERN_DEBUG "scullv: " fmt, ## args)
+#  else
+     /* This one for user space */
+#    define PDEBUG(fmt, args...) fprintf(stderr, fmt, ## args)
+#  endif
+#else
+#  define PDEBUG(fmt, args...) /* not debugging: nothing */
+#endif
+
+#undef PDEBUGG
+#define PDEBUGG(fmt, args...) /* nothing: it's a placeholder */
+
 /* Minor  number is set equal to ATCA Slot Logical number  */
 /**********************************************************************************
 ATCA Slot Numbering on 14 slot Crates:
@@ -31,8 +52,6 @@ Physical | 1  | 2  | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 |
 Logical  | 13 | 11 | 9 | 7 | 5 | 3 | 1 | 2 | 4 | 6  |  8 | 10 | 12 | 14 |
 ***********************************************************************************/
 
-
-//#define DRV_NAME "atca_ioc_int_stream"
 #define NODENAMEFMT "atca_ioc_%d"
 #define DRV_NAME "atca_ioc"
 //#define CHAR_DEVICE_NAME            "pcieATCAAdc"
@@ -45,6 +64,7 @@ Logical  | 13 | 11 | 9 | 7 | 5 | 3 | 1 | 2 | 4 | 6  |  8 | 10 | 12 | 14 |
 
 /* board configurable parameters */
 #define BAR1_RVAL                   0xB
+#define NUM_BARS                   2
 
 /* The DMA_NBYTES will only be used for offline acquisition.
  * Realtime acquisiton will always requires 32 * 4 + 4 + 4 <=> 32 channels +
@@ -258,7 +278,7 @@ typedef struct _PCIE_DEV {
     //max amount  of data stored in memory
     //unsigned long size;
     
-    BAR_STRUCT memIO[2];
+    BAR_STRUCT memIO[NUM_BARS];
     DMA_STRUCT dmaIO;
     
     // buffer struct for read() ops

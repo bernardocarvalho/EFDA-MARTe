@@ -29,7 +29,6 @@
  */
 #include <linux/module.h>
 #include <linux/pci.h>
-//struct file_operations _fops;
 
 //#include <linux/init.h>
 #include <linux/kernel.h>
@@ -42,6 +41,7 @@
 
 
 #include "pci-atca-adc.h"
+#include "pci-atca-adc-ioctl.h"
 
 /* Check macros and kernel version first */
 #ifndef KERNEL_VERSION
@@ -52,7 +52,7 @@
 #error "No LINUX_VERSION_CODE macro! Stopping."
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5,9,0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,9,0)
 #error "This driver has been tested only for Kernel 5.x or above."
 #endif
 
@@ -105,6 +105,39 @@ static struct pci_device_id ids[] = {
     { 0, }
 };
 MODULE_DEVICE_TABLE(pci, ids);
+
+int atca_configure_pci(PCIE_DEV *pcieDev) {
+    u16 reg16 = 0;
+    int i = 0;
+    int ret = 0;
+
+//set command register
+    pci_read_config_word(pcieDev->pdev, PCI_COMMAND, &reg16);
+    printk(KERN_DEBUG "%s%d inserted.\n", DRV_NAME, current_board);
+    reg16 &= ~PCI_COMMAND_IO; // disable IO port access
+    reg16 |= PCI_COMMAND_PARITY; // enable parity error hangs
+    reg16 |= PCI_COMMAND_SERR; // enable addr parity error
+    pci_write_config_word(pcieDev->pdev, PCI_COMMAND, reg16);
+
+    //PCI reading IO memory spaces and set virtual addresses
+    for (i = 0; i < NUM_BARS; i++) {
+        pcieDev->memIO[i].start = pci_resource_start(pcieDev->pdev, i);
+        pcieDev->memIO[i].end = pci_resource_end(pcieDev->pdev, i);
+        pcieDev->memIO[i].len = pci_resource_len(pcieDev->pdev, i);
+        pcieDev->memIO[i].flags = pci_resource_flags(pcieDev->pdev, i);
+        // virtual addr
+        pcieDev->memIO[i].vaddr = ioremap_uc(pcieDev->memIO[i].start,
+                pcieDev->memIO[i].len);
+        if (!pcieDev->memIO[i].vaddr) {
+            printk(KERN_DEBUG "pcieAdc: error in ioremap_uc [%d]. Aborting.\n", ret);
+            return -ENOMEM;
+        }
+    }
+    //virtual pointer to board registers
+    pcieDev->pHregs = (PCIE_HREGS *) pcieDev->memIO[1].vaddr;
+
+    return ret;
+}
 
 //struct file_operations _fops;
 /*   Function prototypes          */
@@ -172,8 +205,6 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
     if (atca_adc_get_revision(pdev) == 0x42)
         return -ENODEV;
-    //init spinlock
-    spin_lock_init(&pcieDev->irq_lock);
     //    pcieDev->irq_lock = SPIN_LOCK_UNLOCKED;
 
     // reset board
@@ -182,8 +213,12 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
     pcieDev->pdev = pdev;
     pcieDev->wt_tmout = 20 * HZ;
     pci_set_drvdata(pdev, pcieDev);
+
+    atca_configure_pci(pcieDev);
     //init_MUTEX(&pcieDev->open_sem);
     sema_init(&pcieDev->open_sem, 1);
+    //init spinlock
+    spin_lock_init(&pcieDev->irq_lock);
 
     //#ifdef _MSI_ENABLE    
     _ret = pci_enable_msi(pdev);
@@ -207,7 +242,7 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
     }
 
     //printk(KERN_INFO "current_board is = %d\n", current_board);
-    printk(KERN_INFO "board %s%d inserted.\n", DRV_NAME, current_board);
+    printk(KERN_DEBUG "board %s%d inserted.\n", DRV_NAME, current_board);
     pcieDev->dev = device_create(atca_ioc_class, NULL,
             pcieDev->devno, NULL, NODENAMEFMT, current_board);
 
@@ -217,10 +252,10 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
 static void _remove(struct pci_dev *pdev)
 {
+     int i;
     /* clean up any allocated resources and stuff here.
      * like call release_region();
      */
-    //PCIE_DEV *pcieDev;
     //get the device information data
     PCIE_DEV * pcieDev = (PCIE_DEV *) pci_get_drvdata(pdev);
 
@@ -235,6 +270,11 @@ static void _remove(struct pci_dev *pdev)
     //cleanupDMA(pcieDev);
 
     device_destroy(atca_ioc_class, pcieDev->devno);
+
+      //disable PCI board, deregister virtual addresses for the board
+    for (i = 0; i < NUM_BARS; i++) {
+        iounmap(pcieDev->memIO[i].vaddr);
+    }
 
     kfree(pcieDev);
     pci_set_drvdata(pdev, NULL);
@@ -281,6 +321,7 @@ static int __init pci_atca_adc_init(void)
         printk(KERN_ERR "pci_atca_adc_init error(%d).\n", _ret);
         goto unreg_class;
     }
+    printk(KERN_DEBUG "pcieAdc: Init.\n");
     return 0;
 unreg_class:
     //class_unregister(atca_ioc_class);
@@ -306,3 +347,5 @@ MODULE_AUTHOR("Bernardo Carvalho/IST-IPFN");
 
 module_init(pci_atca_adc_init);
 module_exit(pci_atca_adc_exit);
+
+//  vim: syntax=cpp ts=4 sw=4 sts=4 sr et
