@@ -1,5 +1,5 @@
 /*
- Test from Michele to learn MARTe
+Test from Michele to learn MARTe
 **/
 
 #ifndef Relay_H
