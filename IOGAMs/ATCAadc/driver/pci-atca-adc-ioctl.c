@@ -28,14 +28,34 @@
  *
  */
 
-#include <linux/module.h>
+//#include <linux/module.h>
+#include <linux/pci.h>
+//#include <linux/kernel.h>
 #include <linux/uaccess.h>
+
+#include "pci-atca-adc.h"
 #include "pci-atca-adc-ioctl.h"
 
 //ssize_t pci-atca-adc-ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg){
 long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
     int err       = 0;
     u32 tempValue = 0;
+
+    PCIE_DEV *pcieDev; /* for device information */
+    COMMAND_REG commandReg;
+    STATUS_REG statusReg;
+
+    /* retrieve the device information  */
+    pcieDev = (PCIE_DEV *)filp->private_data;
+
+    statusReg.reg32 = ioread32((void*) &pcieDev->pHregs->status);
+
+    // if(sReg.reg32 == 0xFFFFFFFF)
+
+    PDEBUG("%s ioctl status Reg:0x%X.\n", DRV_NAME, statusReg.reg32);
+    // PDEBUG("ioctl status Reg:0x%X, cmd: 0x%X, 0x%08X\n", sReg.reg32, cmd, PCIE_ATCA_IOCT_ACQ_DISABLE);
+
+
 
     //extract the type and number bitfields, and don't decode
     //wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok()
@@ -60,9 +80,21 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
     switch(cmd) {
         case PCIE_ATCA_ADC_IOCT_ACQ_ENABLE:
             //EnableATCApcieAcquisition();
+            commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
+            commandReg.cmdFlds.STRG = 0;
+            iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
             break;
         case PCIE_ATCA_ADC_IOCT_ACQ_DISABLE:
             //DisableATCApcieAcquisition();
+            commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
+            commandReg.cmdFlds.DMAE = 0;
+            commandReg.cmdFlds.ACQE = 0;
+            commandReg.cmdFlds.STRG = 0;
+            commandReg.cmdFlds.DMAiE = 0;
+            commandReg.cmdFlds.ERRiE = 0;
+            iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
+            //PCIE_WRITE32(commandReg.reg32, (void*) command_register_addr[master_board_index]);
+
             break;
             /*
                case PCIE_ATCA_ADC_IOCT_NUM_BOARDS:
@@ -164,4 +196,4 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
     return 0;
 }
 
-//  vim: syntax=cpp ts=4 sw=4 sts=4 sr et
+//  vim: syntax=c ts=4 sw=4 sts=4 sr et

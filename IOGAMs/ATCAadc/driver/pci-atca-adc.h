@@ -25,25 +25,7 @@
 #ifndef PCI_ATCA_ADC_H_
 #define PCI_ATCA_ADC_H_
 
-/*
-* Macros to help debugging
-*/
-
-#undef PDEBUG             /* undef it, just in case */
-#ifdef SCULLV_DEBUG
-#  ifdef __KERNEL__
-     /* This one if debugging is on, and kernel space */
-#    define PDEBUG(fmt, args...) printk( KERN_DEBUG "scullv: " fmt, ## args)
-#  else
-     /* This one for user space */
-#    define PDEBUG(fmt, args...) fprintf(stderr, fmt, ## args)
-#  endif
-#else
-#  define PDEBUG(fmt, args...) /* not debugging: nothing */
-#endif
-
-#undef PDEBUGG
-#define PDEBUGG(fmt, args...) /* nothing: it's a placeholder */
+#include <linux/cdev.h>
 
 /* Minor  number is set equal to ATCA Slot Logical number  */
 /**********************************************************************************
@@ -55,6 +37,25 @@ Logical  | 13 | 11 | 9 | 7 | 5 | 3 | 1 | 2 | 4 | 6  |  8 | 10 | 12 | 14 |
 #define NODENAMEFMT "atca_ioc_%d"
 #define DRV_NAME "atca_ioc"
 //#define CHAR_DEVICE_NAME            "pcieATCAAdc"
+
+/*
+* Macros to help debugging
+*/
+#undef PDEBUG             /* undef it, just in case */
+#ifdef ATCA_DEBUG
+#  ifdef __KERNEL__
+     /* This one if debugging is on, and kernel space */
+#    define PDEBUG(fmt, args...) printk( KERN_DEBUG "atca_ioc: " fmt, ## args)
+#  else
+     /* This one for user space */
+#    define PDEBUG(fmt, args...) fprintf(stderr, fmt, ## args)
+#  endif
+#else
+#  define PDEBUG(fmt, args...) /* not debugging: nothing */
+#endif
+
+#undef PDEBUGG
+#define PDEBUGG(fmt, args...) /* nothing: it's a placeholder */
 
 /* Maximum number of devices*/
 #define MAX_DEVICES 12
@@ -78,9 +79,9 @@ Logical  | 13 | 11 | 9 | 7 | 5 | 3 | 1 | 2 | 4 | 6  |  8 | 10 | 12 | 14 |
 //#define DMA_NBYTES                  IN_ANALOG_CHANNELS * 4 + IN_DIGITAL_CHANNELS * 4 + 2 * HEADER_LENGTH * 4 + 4
 #define GFPORDER                    0
 
-#define PCIE_READ32(addr)           ioread32(addr)
-#define PCIE_WRITE32(value, addr)   iowrite32(value, addr)
-#define PCIE_FLUSH32()              PCIE_READ32()
+// #define PCIE_READ32(addr)           ioread32(addr)
+// #define PCIE_WRITE32(value, addr)   iowrite32(value, addr)
+// #define PCIE_FLUSH32()              PCIE_READ32()
 
 #define IRQ_CYCLES                  3
 

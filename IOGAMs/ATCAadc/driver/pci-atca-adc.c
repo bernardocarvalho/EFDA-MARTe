@@ -3,7 +3,7 @@
  * Project Name:   ATCA DAQ
  * Design Name:    ATCA-MIMO-DAQ Streaming  Linux Device Driver
  * PCI Device Id: 24
- * FW Version AA
+ * FW Version A
  * working with kernel 5.x.x
  *
  * Copyright 2023 - 2023 IPFN-Instituto Superior Tecnico, Portugal
@@ -34,11 +34,10 @@
 #include <linux/kernel.h>
 #include <linux/version.h>
 #include <linux/fs.h>
-#include <linux/cdev.h>
+#include <linux/delay.h>
 //#include <linux/dma-mapping.h>
 #include <linux/interrupt.h>
 #include <linux/spinlock.h>
-
 
 #include "pci-atca-adc.h"
 #include "pci-atca-adc-ioctl.h"
@@ -64,8 +63,8 @@ struct class* atca_ioc_class;
 
 static int firmwareRevision   = 0;
 static int current_board      = 0; // -1;
-#define CHAR_DEVICE_NAME            "pcieATCAAdc"
-static int master_board_index = -1;
+//#define CHAR_DEVICE_NAME            "pcieATCAAdc"
+//static int master_board_index = -1;
 static int DMA_NBYTES         = 0;
 // Global DMA address
 int DMA_global_addr[MAX_BOARDS * DMA_BUFFS];
@@ -85,13 +84,15 @@ int status_register_addr[MAX_BOARDS];
 // The slot numbers for each of the board indexes
 int board_slot_numbers[MAX_BOARDS];
 
+/*   Function prototypes          */
+long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
+
 static int SlotNumberToBoardIndex(int slotNum) {
     int i = 0;
     for (i = 0; i < MAX_BOARDS; i++) {
         if (board_slot_numbers[i] == slotNum) {
             return i;
         }
-#define CHAR_DEVICE_NAME            "pcieATCAAdc"
     }
     return -1;
 }
@@ -111,9 +112,10 @@ int atca_configure_pci(PCIE_DEV *pcieDev) {
     int i = 0;
     int ret = 0;
 
-//set command register
+    //set command register
     pci_read_config_word(pcieDev->pdev, PCI_COMMAND, &reg16);
-    printk(KERN_DEBUG "%s%d inserted.\n", DRV_NAME, current_board);
+    PDEBUG("%s pci_config word 0x%04X.\n", DRV_NAME, reg16);
+    // printk(KERN_DEBUG "%s pci_config word 0x%04X.\n", DRV_NAME, reg16);
     reg16 &= ~PCI_COMMAND_IO; // disable IO port access
     reg16 |= PCI_COMMAND_PARITY; // enable parity error hangs
     reg16 |= PCI_COMMAND_SERR; // enable addr parity error
@@ -139,18 +141,44 @@ int atca_configure_pci(PCIE_DEV *pcieDev) {
     return ret;
 }
 
+void setup_atca_parameters(PCIE_DEV *pcieDev) {
+    STATUS_REG statusReg;
+    statusReg.reg32 = ioread32((void*) & pcieDev->pHregs->status);
+ 	firmwareRevision = statusReg.statFlds.revID;
+	PDEBUG("%s setup, firmware: 0x%02X\n", DRV_NAME, firmwareRevision);
+}
+
+int reset_board(PCIE_DEV *pcieDev) {
+    STATUS_REG statusReg;
+    int i;
+
+    statusReg.reg32 = ioread32((void*) & pcieDev->pHregs->status);
+    statusReg.statFlds.RST = 1;
+    iowrite32(statusReg.reg32, (void*) & pcieDev->pHregs->status);
+
+    //wait for reset acknowledgment
+    for (i = 0; i < WAIT_NOOP_CYCLES; i++) {
+        udelay(10000);
+        statusReg.reg32 = ioread32((void*) & pcieDev->pHregs->status);
+        if (!(statusReg.statFlds.RST)){
+			PDEBUG("%s reset at %d\n", DRV_NAME, i);
+            break;
+		}
+    }
+	PDEBUG("%s reset at %d, sReg: 0x%08X\n", DRV_NAME, i, statusReg.reg32);
+    return 0;
+}
 //struct file_operations _fops;
-/*   Function prototypes          */
 
 /*
  * The ioctl() implementation
- */
 
 long _ioctl (struct file *filp, unsigned int cmd, unsigned long arg){
     return 0;
 
 }
 
+ */
 //device open
 //ssize_t _open(struct inode *inode, struct file *file) {
 int _open(struct inode *inode, struct file *file) {
@@ -168,7 +196,7 @@ struct file_operations _fops = {
     .owner      = THIS_MODULE,
     // read =   _pcie_read,
     // write *   _pcie_write,
-    .unlocked_ioctl  = _ioctl,
+    .unlocked_ioctl  = pci_atca_adc_ioctl,
     .open       =  _open,
     .release    = _release
 };
@@ -179,6 +207,64 @@ static unsigned char atca_adc_get_revision(struct pci_dev *dev)
 
     pci_read_config_byte(dev, PCI_REVISION_ID, &revision);
     return revision;
+}
+
+//****************************
+//* DMA management functions *
+//****************************
+
+int enable_dma(struct pci_dev *pdev) {
+    int ret;
+    /*
+       ret = pci_dma_supported(pdev, DMA_32BIT_MASK);
+       if (!ret) {
+       printk(KERN_ERR "pcieAdc: DMA not supported. Aborting.\n");
+       return ret;
+       }
+       ret = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
+       if (ret) {
+       printk(KERN_ERR "pcieAdc: pci_set_dma_mask error [%d]. Aborting.\n", ret);
+       return ret;
+       }
+       ret = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
+       if (ret) {
+       printk(KERN_ERR "pcieAdc: pci_set_consistent_dma_mask error [%d]. Aborting.\n",
+       ret);
+       return ret;
+       }
+       */
+	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))) {
+		/* query for DMA transfer */
+		/* @see Documentation/DMA-mapping.txt */
+		PDEBUG("pci_set_dma_mask()\n");
+		/* use 64-bit DMA */
+		PDEBUG("Using a 64-bit DMA mask.\n");
+		pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
+
+	} else if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) {
+		PDEBUG("Could not set 64-bit DMA mask.\n");
+        pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
+        /* use 32-bit DMA */
+        PDEBUG("Using a 32-bit DMA mask.\n");
+    } else {
+        printk(KERN_ERR "No suitable DMA possible.\n");
+        return -EINVAL;
+    }
+    /* enable bus master capability */
+    pci_set_master(pdev);
+    // Enable Memory-Write-Invalidate transactions.
+       ret = pci_set_mwi(pdev); // needed?
+       if (ret) {
+       printk(KERN_DEBUG "pcieAdc: pci_set_mwi error [%d]. Aborting.\n", ret);
+       return ret;
+       }
+    return 0;
+}
+
+int disableDMAonboard(struct pci_dev *pdev) {
+    pci_clear_mwi(pdev);
+
+    return 0;
 }
 
 static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
@@ -207,6 +293,11 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
         return -ENODEV;
     //    pcieDev->irq_lock = SPIN_LOCK_UNLOCKED;
 
+    _ret = enable_dma(pdev);
+    if (_ret != 0) {
+        PDEBUG("pcieAdc: error in DMA initialization. Aborting.\n");
+        return _ret;
+    }
     // reset board
     //resetBoard(pcieDev);
 
@@ -215,20 +306,22 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
     pci_set_drvdata(pdev, pcieDev);
 
     atca_configure_pci(pcieDev);
+    reset_board(pcieDev);
+    PDEBUG("%s: Reset Done.\n", DRV_NAME);
+	setup_atca_parameters(pcieDev);
     //init_MUTEX(&pcieDev->open_sem);
     sema_init(&pcieDev->open_sem, 1);
     //init spinlock
     spin_lock_init(&pcieDev->irq_lock);
 
-    //#ifdef _MSI_ENABLE    
     _ret = pci_enable_msi(pdev);
     if (_ret) {
         printk(KERN_ERR "pci_enable_msi %d error[%d]\n", pcieDev->pdev->irq, _ret);
         return _ret;
     }
-    //#endif
     // Waitqueue initialization
     init_waitqueue_head(&pcieDev->rd_q);
+
     cdev_init(&pcieDev->cdev, &_fops);
     pcieDev->cdev.owner = THIS_MODULE;
     pcieDev->cdev.ops = &_fops;
@@ -241,8 +334,7 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
         return -EIO;
     }
 
-    //printk(KERN_INFO "current_board is = %d\n", current_board);
-    printk(KERN_DEBUG "board %s%d inserted.\n", DRV_NAME, current_board);
+    PDEBUG("board %s%d inserted.\n", DRV_NAME, current_board);
     pcieDev->dev = device_create(atca_ioc_class, NULL,
             pcieDev->devno, NULL, NODENAMEFMT, current_board);
 
@@ -252,7 +344,7 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
 static void _remove(struct pci_dev *pdev)
 {
-     int i;
+    int i;
     /* clean up any allocated resources and stuff here.
      * like call release_region();
      */
@@ -271,7 +363,7 @@ static void _remove(struct pci_dev *pdev)
 
     device_destroy(atca_ioc_class, pcieDev->devno);
 
-      //disable PCI board, deregister virtual addresses for the board
+    //disable PCI board, deregister virtual addresses for the board
     for (i = 0; i < NUM_BARS; i++) {
         iounmap(pcieDev->memIO[i].vaddr);
     }
@@ -321,7 +413,7 @@ static int __init pci_atca_adc_init(void)
         printk(KERN_ERR "pci_atca_adc_init error(%d).\n", _ret);
         goto unreg_class;
     }
-    printk(KERN_DEBUG "pcieAdc: Init.\n");
+    PDEBUGG("%s: Init.\n", DRV_NAME);
     return 0;
 unreg_class:
     //class_unregister(atca_ioc_class);
@@ -330,7 +422,6 @@ unreg_chrdev:
     unregister_chrdev_region(MKDEV(device_major,0), MAX_DEVICES);
 fail:
     return _ret;
-
 }
 
 static void __exit pci_atca_adc_exit(void)
@@ -348,4 +439,4 @@ MODULE_AUTHOR("Bernardo Carvalho/IST-IPFN");
 module_init(pci_atca_adc_init);
 module_exit(pci_atca_adc_exit);
 
-//  vim: syntax=cpp ts=4 sw=4 sts=4 sr et
+//  vim: syntax=c ts=4 sw=4 sts=4 sr et
