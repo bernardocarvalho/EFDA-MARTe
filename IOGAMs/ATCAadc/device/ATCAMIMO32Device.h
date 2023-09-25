@@ -42,6 +42,7 @@ namespace atca
             int setup(bool softTrigger, uint32_t readTimeout, bool chopped,
                     uint16_t chopperFreq = 1000);
             string getDeviceName()
+
             {
                 return deviceName;
             }
@@ -87,3 +88,5 @@ namespace atca
 } // namespace atca
 
 #endif // ATCAMIMO32DEVICE_H_
+
+//  vim: syntax=cpp ts=4 sw=4 sts=4 sr et
