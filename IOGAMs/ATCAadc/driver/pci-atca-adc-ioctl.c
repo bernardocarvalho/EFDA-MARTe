@@ -38,7 +38,7 @@
 
 //ssize_t pci-atca-adc-ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg){
 long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
-    int err       = 0;
+    int err = 0, retval = 0;
     u32 tempValue = 0;
 
     PCIE_DEV *pcieDev; /* for device information */
@@ -52,16 +52,14 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
 
     // if(sReg.reg32 == 0xFFFFFFFF)
 
-    PDEBUG("%s ioctl status Reg:0x%X.\n", DRV_NAME, statusReg.reg32);
     // PDEBUG("ioctl status Reg:0x%X, cmd: 0x%X, 0x%08X\n", sReg.reg32, cmd, PCIE_ATCA_IOCT_ACQ_DISABLE);
-
 
 
     //extract the type and number bitfields, and don't decode
     //wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok()
-    if (_IOC_TYPE(cmd) != PCIE_ATCA_ADC_IOCT_MAGIC)
+    if (_IOC_TYPE(cmd) != PCIE_ATCA_ADC_IOC_MAGIC)
         return -ENOTTY;
-    if (_IOC_NR(cmd) > PCIE_ATCA_ADC_IOCT_MAXNR)
+    if (_IOC_NR(cmd) > PCIE_ATCA_ADC_IOC_MAXNR)
         return -ENOTTY;
 
     /*
@@ -93,6 +91,7 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
             commandReg.cmdFlds.DMAiE = 0;
             commandReg.cmdFlds.ERRiE = 0;
             iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
+            PDEBUG("%s ioctl ACQ_DIS commandReg: 0x%08X.\n", DRV_NAME, commandReg.reg32);
             //PCIE_WRITE32(commandReg.reg32, (void*) command_register_addr[master_board_index]);
 
             break;
@@ -189,11 +188,17 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
             printk("DMA_global_addr[3] = %d\n", *((u32 *)DMA_global_addr[3]));
             break;
             */
+        case PCIE_ATCA_ADC_IOCG_GET_STATUS_REG:
+            statusReg.reg32 = ioread32((void*) & pcieDev->pHregs->status);
+            PDEBUG("%s ioctl status Reg:0x%08X.\n", DRV_NAME, statusReg.reg32);
+            if(copy_to_user((void __user *)arg, &statusReg.reg32, sizeof(u32)))
+                return -EFAULT;
+            break;
         default:  /* redundant, as cmd was checked against MAXNR */
-                return -ENOTTY;
+            return -ENOTTY;
 
     }
-    return 0;
+    return retval;
 }
 
 //  vim: syntax=c ts=4 sw=4 sts=4 sr et

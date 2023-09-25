@@ -60,7 +60,6 @@ namespace atca {
 #else
         deviceHandle = ::open(deviceName, O_RDONLY);
 #endif
-
         if (deviceHandle == -1)
             return -1;
         isDeviceOpen = true;
@@ -80,40 +79,32 @@ namespace atca {
         result = ::close(deviceHandle);
 #endif
 
-        if (result == 0)
-            deviceHandle = -1;
+        //if (result == 0)
+        deviceHandle = -1;
 
         return errno;
     }
 
-    int ATCAMIMO32Device::readStatus(uint32_t* status)
+    int ATCAMIMO32Device::readStatus(uint32_t* statusp)
     {
-        int result = 0;
         if(!isDeviceOpen) {
             return EXIT_FAILURE;
         }
-        status = 0;
+        int result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCG_GET_STATUS_REG, statusp);
         return result;
-        //isDeviceOpen = false;
     }
 
     int ATCAMIMO32Device::disableAcquisition()
     {
-        int result = 0;
+        //int resultx = 0;
         if(!isDeviceOpen) {
             return EXIT_FAILURE;
         }
-        isDeviceOpen = false;
 
-        errno = 0;
-#ifndef DUMMYMODE
-        result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCT_ACQ_DISABLE);
-#endif
-
-        if (result == 0)
-            deviceHandle = -1;
-
-        return errno;
+//#ifndef DUMMYMODE
+        int result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCT_ACQ_DISABLE);
+//#endif
+        return result;
     }
 
 } // namespace atca

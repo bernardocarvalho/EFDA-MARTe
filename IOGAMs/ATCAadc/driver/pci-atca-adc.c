@@ -211,13 +211,33 @@ int cleanup_dma(PCIE_DEV *pcieDev) {
 }
 
 //device open
-int _open(struct inode *inode, struct file *file) {
+int _open(struct inode *inode, struct file *filp) {
+     PCIE_DEV *pcieDev;   /* device information */
+
+     /** retrieve the device information  */
+     pcieDev = container_of(inode->i_cdev,  PCIE_DEV, cdev);
+     if (down_interruptible(&pcieDev->open_sem))
+         return -ERESTARTSYS;
+
+     filp->private_data = pcieDev; //for other methods
+     //atomic_set(&pciDev->rd_condition, 0); // prepare to read *****************************
+     up(&pcieDev->open_sem);
+     //
+     //
     printk(KERN_INFO "pci-atca-adc device driver access opened\n");
     return 0;
 }
 
 //device close
-int _release(struct inode *inode, struct file *file) {
+int _release(struct inode *inode, struct file *filp) {
+    PCIE_DEV *pcieDev;   /* device information */
+
+    /** retrieve the device information  */
+    pcieDev = container_of(inode->i_cdev,  PCIE_DEV, cdev);
+    down(&pcieDev->open_sem);
+
+    filp->private_data = NULL;
+    up(&pcieDev->open_sem);
     printk(KERN_INFO "pci-atca-adc device driver access closed(released)\n");
     return 0;
 }

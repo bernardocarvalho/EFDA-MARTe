@@ -34,19 +34,27 @@ namespace atca_test
         ATCAMIMO32Device device(1024*8); //, dataMbSize, dmaBufferSize);
         snprintf(devname, 64, ATCA_NODE_NAME_FMT, deviceNumber);
 #ifdef DEBUG
-        printf("Opening Device name = %s,\t", devname);
 #endif
-        int rc = device.open(devname);
-        //deviceHandle = ::open(devname, O_RDWR | O_SYNC);
-        if (deviceHandle == -1){
+        //int rc = device.open(devname);
+        if(device.open(devname)) {
+            std::cerr << "Failed Opening Device name = " << devname << std::endl;
             return EXIT_FAILURE;
         }
-        //::close(deviceHandle);
-        //device.disableAcquisition();
-        device.readStatus(&statusReg);
-        std::cout << "Device statusReg: "<< statusReg << std::endl;
+        else
+            std::cout << "Openned Device name = " << devname << std::endl;
+        //deviceHandle = ::open(devname, O_RDWR | O_SYNC);
+        //if (deviceHandle == -1){
+          //  return EXIT_FAILURE;
+        //}
+        if(device.disableAcquisition());
+            std::cerr << "Device ioctl  Error: "<< std::endl;
+
+        if(device.readStatus(&statusReg))
+            std::cerr << "Device statusReg read Error: "<< std::endl;
+        else
+            //std::cout << "Device statusReg: "<< statusReg << std::endl;
+            printf("Device statusReg: 0x%08X.\n", statusReg);
         device.close();
-        //::close(deviceHandle);
         return EXIT_SUCCESS;
     }
 } // namespace atca_test

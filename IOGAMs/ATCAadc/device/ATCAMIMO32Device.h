@@ -53,7 +53,7 @@ namespace atca
    */
             //int getSampleCounter(uint16_t* counter);
 //            int getStatus(uint16_t* status);
-            int readStatus(uint32_t* status);
+            int readStatus(uint32_t* statusp);
 
             int enableAcquisition();
             int disableAcquisition();
