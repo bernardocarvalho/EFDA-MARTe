@@ -65,38 +65,39 @@ static int firmwareRevision   = 0;
 static int current_board      = 0; // -1;
 //#define CHAR_DEVICE_NAME            "pcieATCAAdc"
 //static int master_board_index = -1;
-static int DMA_NBYTES         = 0;
+//static int DMA_NBYTES         = 0;
+static int dma_n_bytes         = 0;
 // Global DMA address
-int DMA_global_addr[MAX_BOARDS * DMA_BUFFS];
+//int DMA_global_addr[MAX_BOARDS * DMA_BUFFS];
 
 // DAC locations
-int DAC_addr[MAX_BOARDS * N_DACS_PER_BOARDS];
+int DAC_addr[MAX_DEVICES * N_DACS_PER_BOARDS];
 
 // DIO locations
-int DIO_addr[MAX_BOARDS * N_DIOS_PER_BOARD];
+int DIO_addr[MAX_DEVICES * N_DIOS_PER_BOARD];
 
 // Command register locations (in order to export the enable and disable acquisition function)
-int command_register_addr[MAX_BOARDS];
+//int command_register_addr[MAX_BOARDS];
 
 // Status register locations
-int status_register_addr[MAX_BOARDS];
+//int status_register_addr[MAX_BOARDS];
 
 // The slot numbers for each of the board indexes
-int board_slot_numbers[MAX_BOARDS];
+//int board_slot_numbers[MAX_BOARDS];
 
 /*   Function prototypes          */
 long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
-
+/*
 static int SlotNumberToBoardIndex(int slotNum) {
     int i = 0;
-    for (i = 0; i < MAX_BOARDS; i++) {
+    for (i = 0; i < MAX_DEVICES; i++) {
         if (board_slot_numbers[i] == slotNum) {
             return i;
         }
     }
     return -1;
 }
-
+*/
 //****************************
 //* DMA management functions *
 //****************************
@@ -144,8 +145,8 @@ int atca_configure_pci(PCIE_DEV *pcieDev) {
 void setup_atca_parameters(PCIE_DEV *pcieDev) {
     STATUS_REG statusReg;
     statusReg.reg32 = ioread32((void*) & pcieDev->pHregs->status);
- 	firmwareRevision = statusReg.statFlds.revID;
-	PDEBUG("%s setup, firmware: 0x%02X\n", DRV_NAME, firmwareRevision);
+    firmwareRevision = statusReg.statFlds.revID;
+    PDEBUG("%s setup, firmware: 0x%02X\n", DRV_NAME, firmwareRevision);
 }
 
 int reset_board(PCIE_DEV *pcieDev) {
@@ -161,31 +162,59 @@ int reset_board(PCIE_DEV *pcieDev) {
         udelay(10000);
         statusReg.reg32 = ioread32((void*) & pcieDev->pHregs->status);
         if (!(statusReg.statFlds.RST)){
-			PDEBUG("%s reset at %d\n", DRV_NAME, i);
+            PDEBUG("%s reset at %d\n", DRV_NAME, i);
             break;
-		}
+        }
     }
-	PDEBUG("%s reset at %d, sReg: 0x%08X\n", DRV_NAME, i, statusReg.reg32);
+    PDEBUG("%s reset at %d, sReg: 0x%08X\n", DRV_NAME, i, statusReg.reg32);
     return 0;
 }
-//struct file_operations _fops;
 
-/*
- * The ioctl() implementation
+//int setupDMA(PCIE_DEV *pcieDev, DMA_REG dmaReg, COMMAND_REG commandReg) {
+int setup_dma(PCIE_DEV *pcieDev) {
+    int i = 0;
 
-long _ioctl (struct file *filp, unsigned int cmd, unsigned long arg){
-    return 0;
+    pcieDev->dmaIO.buf_size = DMA_NBYTES;
 
+    // allocating DMA buffers
+    for (i = 0; i < DMA_BUFFS; i++) {
+        // set up a coherent mapping through PCI subsystem
+        pcieDev->dmaIO.dmaBuffer[i].addr_v = pci_alloc_consistent(
+                pcieDev->pdev, pcieDev->dmaIO.buf_size,
+                &(pcieDev->dmaIO.dmaBuffer[i].addr_hw));
+        if (!pcieDev->dmaIO.dmaBuffer[i].addr_v || !pcieDev->dmaIO.dmaBuffer[i].addr_hw) {
+            printk(KERN_ERR  "pcieAdc: pci_alloc_consistent error (v:%p hw:%p). Aborting.\n",
+                    (void*) pcieDev->dmaIO.dmaBuffer[i].addr_v,
+                    (void*) pcieDev->dmaIO.dmaBuffer[i].addr_hw);
+            return -ENOMEM;
+        }
+        memset((void*) (pcieDev->dmaIO.dmaBuffer[i].addr_v), 0,
+                pcieDev->dmaIO.buf_size);
+    }
+     return 0;
 }
 
- */
+int cleanup_dma(PCIE_DEV *pcieDev) {
+    int i = 0;
+    for (i = 0; i < DMA_BUFFS; i++) {
+        //ClearPageReserved(virt_to_page(pcieDev->dmaIO.dmaBuffer[i].addr_v));
+        pci_free_consistent(pcieDev->pdev, pcieDev->dmaIO.buf_size,
+                pcieDev->dmaIO.dmaBuffer[i].addr_v,
+                pcieDev->dmaIO.dmaBuffer[i].addr_hw);
+    }
+
+    // clear DMA addresses on board
+    for (i = 0; i < DMA_BUFFS; i++) {
+        iowrite32(0, (void*) & pcieDev->pHregs->HwDmaAddr[i]);
+    }
+    return 0;
+}
+
 //device open
-//ssize_t _open(struct inode *inode, struct file *file) {
 int _open(struct inode *inode, struct file *file) {
     printk(KERN_INFO "pci-atca-adc device driver access opened\n");
     return 0;
 }
-
 
 //device close
 int _release(struct inode *inode, struct file *file) {
@@ -233,16 +262,16 @@ int enable_dma(struct pci_dev *pdev) {
        return ret;
        }
        */
-	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))) {
-		/* query for DMA transfer */
-		/* @see Documentation/DMA-mapping.txt */
-		PDEBUG("pci_set_dma_mask()\n");
-		/* use 64-bit DMA */
-		PDEBUG("Using a 64-bit DMA mask.\n");
-		pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
+    if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))) {
+        /* query for DMA transfer */
+        /* @see Documentation/DMA-mapping.txt */
+        PDEBUG("pci_set_dma_mask()\n");
+        /* use 64-bit DMA */
+        PDEBUG("Using a 64-bit DMA mask.\n");
+        pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
 
-	} else if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) {
-		PDEBUG("Could not set 64-bit DMA mask.\n");
+    } else if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) {
+        PDEBUG("Could not set 64-bit DMA mask.\n");
         pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
         /* use 32-bit DMA */
         PDEBUG("Using a 32-bit DMA mask.\n");
@@ -253,11 +282,11 @@ int enable_dma(struct pci_dev *pdev) {
     /* enable bus master capability */
     pci_set_master(pdev);
     // Enable Memory-Write-Invalidate transactions.
-       ret = pci_set_mwi(pdev); // needed?
-       if (ret) {
-       printk(KERN_DEBUG "pcieAdc: pci_set_mwi error [%d]. Aborting.\n", ret);
-       return ret;
-       }
+    ret = pci_set_mwi(pdev); // needed?
+    if (ret) {
+        printk(KERN_DEBUG "pcieAdc: pci_set_mwi error [%d]. Aborting.\n", ret);
+        return ret;
+    }
     return 0;
 }
 
@@ -271,9 +300,8 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
 {
     int _ret = 0;
     PCIE_DEV *pcieDev = NULL;
-    COMMAND_REG commandReg;
-    DMA_REG dmaReg;
-
+    //COMMAND_REG commandReg;
+   // DMA_REG dmaReg;
 
     //allocate the device instance block
     pcieDev = kzalloc(sizeof (PCIE_DEV), GFP_KERNEL);
@@ -298,17 +326,23 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
         PDEBUG("pcieAdc: error in DMA initialization. Aborting.\n");
         return _ret;
     }
-    // reset board
-    //resetBoard(pcieDev);
 
     pcieDev->pdev = pdev;
     pcieDev->wt_tmout = 20 * HZ;
     pci_set_drvdata(pdev, pcieDev);
 
     atca_configure_pci(pcieDev);
+    // reset board
     reset_board(pcieDev);
-    PDEBUG("%s: Reset Done.\n", DRV_NAME);
-	setup_atca_parameters(pcieDev);
+    setup_atca_parameters(pcieDev);
+    //Set up DMA
+    _ret = setup_dma(pcieDev); //, dmaReg); commandReg);
+    if (_ret) {
+        //printk("pcieAdc: error in DMA setup. Aborting.\n");
+        printk(KERN_ERR "%s setup_dma error[%d]\n", DRV_NAME, _ret);
+        return _ret;
+    }
+
     //init_MUTEX(&pcieDev->open_sem);
     sema_init(&pcieDev->open_sem, 1);
     //init spinlock
@@ -356,10 +390,10 @@ static void _remove(struct pci_dev *pdev)
     //pci_disable_msi(pcieDev->pdev);
     //#endif
     //Reset
-    // resetBoard(pcieDev);
+    reset_board(pcieDev);
 
     //deregistering DMAable areas
-    //cleanupDMA(pcieDev);
+    cleanup_dma(pcieDev);
 
     device_destroy(atca_ioc_class, pcieDev->devno);
 

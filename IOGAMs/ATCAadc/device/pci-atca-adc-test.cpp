@@ -7,12 +7,13 @@
  * This source code is licensed under BSD-style license (found in the
  * LICENSE file in the root directory of this source tree)
  */
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <unistd.h>
+//#include <fcntl.h>
+//#include <stdlib.h>
+#include <iostream>
+//#include <sys/types.h>
+//#include <sys/stat.h>
 
 #include "ATCAMIMO32Device.h"
 
@@ -20,11 +21,12 @@
 
 using namespace atca;
 
-//namespace atca_test
-//{
+namespace atca_test
+{
     //    int numberOfAcquisitionRounds = 0;
     int deviceNumber = 0;
     int deviceHandle;
+    uint32_t statusReg;
 
     int runTest(int argc, char* argv[]) {
 
@@ -40,15 +42,18 @@ using namespace atca;
             return EXIT_FAILURE;
         }
         //::close(deviceHandle);
+        //device.disableAcquisition();
+        device.readStatus(&statusReg);
+        std::cout << "Device statusReg: "<< statusReg << std::endl;
         device.close();
         //::close(deviceHandle);
         return EXIT_SUCCESS;
     }
-//} // namespace atca_test
+} // namespace atca_test
 
 int main(int argc, char* argv[])
 {
-    return runTest(argc, argv);
+    return atca_test::runTest(argc, argv);
 }
 
 /*

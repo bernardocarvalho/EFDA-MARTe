@@ -21,12 +21,13 @@
 #include <time.h>
 #endif
 
-#include <stdint.h>
-#include <string>
-#include <pthread.h>
+//#include <stdint.h>
+//#include <string>
+//#include <pthread.h>
 #include <semaphore.h>
+#include <atomic>
 
-using namespace std;
+//using namespace std;
 
 namespace atca
 {
@@ -37,29 +38,29 @@ namespace atca
         public:
             ATCAMIMO32Device(uint32_t bufferSize);//, bool useRTReadThread = false);
             virtual ~ATCAMIMO32Device();
-            int open(string deviceName);
+            int open(char *deviceName);
             int close();
-            int setup(bool softTrigger, uint32_t readTimeout, bool chopped,
-                    uint16_t chopperFreq = 1000);
-            string getDeviceName()
+            //int setup(bool softTrigger, uint32_t readTimeout, bool chopped,
+            //        uint16_t chopperFreq = 1000);
+/*            string getDeviceName()
 
             {
                 return deviceName;
             }
-            /*
-               int getBufferFillSize()
                {
                return dmaBufferFillSize;
                }
-               */
+   */
             //int getSampleCounter(uint16_t* counter);
-            int getStatus(uint16_t* status);
+//            int getStatus(uint16_t* status);
+            int readStatus(uint32_t* status);
+
             int enableAcquisition();
             int disableAcquisition();
             int read(int16_t* buffer, uint8_t nChannels, uint32_t nSamples);
 
         private:
-            string deviceName;
+            //char deviceName[64];
             int deviceHandle;
             //bool useRTReadThread;
             bool softTrigger;
@@ -82,6 +83,9 @@ namespace atca
             // int enableChopper(uint16_t chopperFreq);
             int createDMAReadThread();
             static void* dmaReadLoop(void* device);
+            //std::atomic_bool dmaReadLoopActive;
+
+            std::atomic_bool isDeviceOpen;
 
     };
 

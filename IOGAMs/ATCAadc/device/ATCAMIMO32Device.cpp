@@ -8,23 +8,24 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+//#include <string>
+//#include <cstring>
+#include <iostream>
+//#include <stdlib.h>
+//#include <stdio.h>
 #include <errno.h>
+//#include <sys/types.h>
+#include <sys/ioctl.h>
 
 #include "ATCAMIMO32Device.h"
-//#include "pci-atca-adc.h"
 #include "pci-atca-adc-ioctl.h"
 
 namespace atca {
     ATCAMIMO32Device::ATCAMIMO32Device(uint32_t bufferSize): //, bool useRTReadThread) :
-        dmaReadThread(0), dmaReadLoopActive(false) {
+        isDeviceOpen(false), dmaReadThread(0), dmaReadLoopActive(false)
+    {
         dmaBufferSize = bufferSize ;// * 1024LL * 1024LL;
 
         dmaBuffer = (uint8_t*) malloc(dmaBufferSize);
@@ -46,27 +47,67 @@ namespace atca {
         pthread_mutex_destroy(&readMutex);
     }
 
-    int ATCAMIMO32Device::open(string deviceName)
+    int ATCAMIMO32Device::open(char *deviceName)
     {
-        this->deviceName = deviceName;
+        if(isDeviceOpen) {
+            std::cerr << "Device already opened, closing device." << std::endl;
+            close();
+        }
+        //this->deviceName = deviceName;
         errno = 0;
 #ifdef DUMMYMODE
         deviceHandle = 0;
 #else
-        deviceHandle = ::open(deviceName.c_str(), O_RDONLY);
+        deviceHandle = ::open(deviceName, O_RDONLY);
 #endif
 
         if (deviceHandle == -1)
             return -1;
+        isDeviceOpen = true;
         return 0;
     }
 
     int ATCAMIMO32Device::close()
     {
         int result = 0;
+        if(!isDeviceOpen) {
+            return EXIT_FAILURE;
+        }
+        isDeviceOpen = false;
+
         errno = 0;
 #ifndef DUMMYMODE
         result = ::close(deviceHandle);
+#endif
+
+        if (result == 0)
+            deviceHandle = -1;
+
+        return errno;
+    }
+
+    int ATCAMIMO32Device::readStatus(uint32_t* status)
+    {
+        int result = 0;
+        if(!isDeviceOpen) {
+            return EXIT_FAILURE;
+        }
+        status = 0;
+        return result;
+        //isDeviceOpen = false;
+    }
+
+    int ATCAMIMO32Device::disableAcquisition()
+    {
+        int result = 0;
+        if(!isDeviceOpen) {
+            return EXIT_FAILURE;
+        }
+        isDeviceOpen = false;
+
+        errno = 0;
+#ifndef DUMMYMODE
+        result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCT_ACQ_DISABLE);
 #endif
 
         if (result == 0)

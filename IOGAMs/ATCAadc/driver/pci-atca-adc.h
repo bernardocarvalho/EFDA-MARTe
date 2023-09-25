@@ -72,11 +72,11 @@ Logical  | 13 | 11 | 9 | 7 | 5 | 3 | 1 | 2 | 4 | 6  |  8 | 10 | 12 | 14 |
  * + header + footer */
 #define IN_DIGITAL_CHANNELS_V1      1
 #define IN_DIGITAL_CHANNELS_V2      9
-#define IN_ANALOG_CHANNELS          32
+#define IN_ANALOG_CHANNELS          (32)
 #define N_DACS_PER_BOARDS	        8
 #define N_DIOS_PER_BOARD            1
 #define HEADER_LENGTH     	        1
-//#define DMA_NBYTES                  IN_ANALOG_CHANNELS * 4 + IN_DIGITAL_CHANNELS * 4 + 2 * HEADER_LENGTH * 4 + 4
+#define DMA_NBYTES                  (IN_ANALOG_CHANNELS * 4 + IN_DIGITAL_CHANNELS_V2 * 4 + 2 * HEADER_LENGTH * 4 + 4)
 #define GFPORDER                    0
 
 // #define PCIE_READ32(addr)           ioread32(addr)
@@ -89,7 +89,7 @@ Logical  | 13 | 11 | 9 | 7 | 5 | 3 | 1 | 2 | 4 | 6  |  8 | 10 | 12 | 14 |
 #define DMA_SZE_REG                 8
 #define DMA_NINT_REG                0xC
 #define DMA_BUFFS                   4 //The number of DMA buffers
-#define MAX_BOARDS		            12
+//#define MAX_BOARDS		            12
 
 
 #ifdef __cplusplus
