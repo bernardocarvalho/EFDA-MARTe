@@ -1,3 +1,4 @@
+#!/bin/bash 
 #############################################################
 #
 # Copyright 2011 EFDA | European Fusion Development Agreement
@@ -23,7 +24,6 @@
 #
 #############################################################
 #Start-up script for the MARTe WaterTank example
-#!/bin/sh 
 
 if [ -z "$1" ]; then
 	echo "Please specify the location of the configuration file"
@@ -47,7 +47,8 @@ esac
 
 echo "Target is $TARGET"
 
-CODE_DIRECTORY=../..
+#CODE_DIRECTORY=../..
+CODE_DIRECTORY=/opt/EFDA-MARTe
 LD_LIBRARY_PATH=.:$CODE_DIRECTORY/BaseLib2/${TARGET}/
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CODE_DIRECTORY/MARTe/MARTeSupportLib/${TARGET}/
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CODE_DIRECTORY/IOGAMs/${TARGET}/

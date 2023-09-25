@@ -1,0 +1,4 @@
+; Test from Michele to learn MARTe
+LIBRARY    RelayGAM
+DESCRIPTION "RelayGAM"
+EXPORTS
