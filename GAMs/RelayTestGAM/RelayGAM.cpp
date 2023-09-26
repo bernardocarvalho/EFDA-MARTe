@@ -193,20 +193,6 @@ bool RelayGAM::Execute(GAM_FunctionNumbers functionNumber) {
                     //float error = inputData->errorSignal;
                     float error            = inputData->reference - inputData->measurement;
                     float controlValue     = 0.0;
-
-                    
-                    // Calculate discharge action if enabled
-                    if (fastDischargeEnabled) {
-		        if((integrator*error) < 0) {
-			    float absoluteErrorContribution = error*fastDischargeAbsoluteErrorScalingFactor;
-			    if (fabs(absoluteErrorContribution) > fastDischargeAbsoluteErrorMaximumContribution) {
-			        absoluteErrorContribution = absoluteErrorContribution*fastDischargeAbsoluteErrorMaximumContribution/fabs(absoluteErrorContribution);
-			    }
-			    dischargeAction = absoluteErrorContribution;
-			} else {
-			    dischargeAction = 0.0;
-			}
-                    }
                     
                     // Calculate the action
                     if(error>0){
@@ -222,14 +208,7 @@ bool RelayGAM::Execute(GAM_FunctionNumbers functionNumber) {
                     outputData->error               = error;
 
                 } else if(inputData->usecTime > tEndUsec[currentTimeWindow]) {
-                    if(currentTimeWindow < numberOfTimeWindows-1) {
-		        IsPreviousControlValueAvailable = False;
-			previousControlValue = 0.0;
-                        currentTimeWindow++;
-                    }
-                } else {
-                    IsPreviousControlValueAvailable = False;
-		    previousControlValue = 0.0;
+                    //I guess we get here if we go over the real time scheduled time
                 }
             } // end if controllerEnabled
         }

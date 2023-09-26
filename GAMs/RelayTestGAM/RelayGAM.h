@@ -56,7 +56,7 @@ private:
 
 public:
     /** Constructor */
-    PIDGAM() {
+    RelayGAM() {
         input                                         = NULL;
         output                                        = NULL;
 
@@ -78,7 +78,7 @@ public:
     }
 
     /** Destructor */
-    ~PIDGAM(){
+    ~RelayGAM(){
         CheckAndFreeDynamicMemory();
     }
 
