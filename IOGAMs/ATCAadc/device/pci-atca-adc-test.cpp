@@ -31,10 +31,12 @@ namespace atca_test
     int runTest(int argc, char* argv[]) {
 
         char devname[64];
+        int rc;
+
         ATCAMIMO32Device device(1024*8); //, dataMbSize, dmaBufferSize);
         snprintf(devname, 64, ATCA_NODE_NAME_FMT, deviceNumber);
-#ifdef DEBUG
-#endif
+        //#ifdef DEBUG
+        //#endif
         //int rc = device.open(devname);
         if(device.open(devname)) {
             std::cerr << "Failed Opening Device name = " << devname << std::endl;
@@ -42,18 +44,18 @@ namespace atca_test
         }
         else
             std::cout << "Openned Device name = " << devname << std::endl;
-        //deviceHandle = ::open(devname, O_RDWR | O_SYNC);
-        //if (deviceHandle == -1){
-          //  return EXIT_FAILURE;
-        //}
-        if(device.disableAcquisition());
-            std::cerr << "Device ioctl  Error: "<< std::endl;
+        
+        if(rc = device.enableAcquisition())
+            std::cerr << "Device EN ACQ ioctl Error: "<< rc << std::endl;
+
+        if(rc = device.disableAcquisition())
+            std::cerr << "Device DIS ACQ ioctl  Error: "<< rc << std::endl;
 
         if(device.readStatus(&statusReg))
             std::cerr << "Device statusReg read Error: "<< std::endl;
         else
-            //std::cout << "Device statusReg: "<< statusReg << std::endl;
-            printf("Device statusReg: 0x%08X.\n", statusReg);
+            std::cout << "Device statusReg: 0x"<< std::hex << statusReg << std::endl;
+            //printf("Device statusReg: 0x%08X.\n", statusReg);
         device.close();
         return EXIT_SUCCESS;
     }

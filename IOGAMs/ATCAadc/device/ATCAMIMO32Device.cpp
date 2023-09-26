@@ -90,17 +90,23 @@ namespace atca {
         if(!isDeviceOpen) {
             return EXIT_FAILURE;
         }
-        int result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCG_GET_STATUS_REG, statusp);
+        int result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCG_STATUS_REG, statusp);
         return result;
     }
 
-    int ATCAMIMO32Device::disableAcquisition()
+    int ATCAMIMO32Device::enableAcquisition()
     {
-        //int resultx = 0;
         if(!isDeviceOpen) {
             return EXIT_FAILURE;
         }
-
+        int result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCT_ACQ_ENABLE);
+        return result;
+    }
+    int ATCAMIMO32Device::disableAcquisition()
+    {
+        if(!isDeviceOpen) {
+            return EXIT_FAILURE;
+        }
 //#ifndef DUMMYMODE
         int result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCT_ACQ_DISABLE);
 //#endif

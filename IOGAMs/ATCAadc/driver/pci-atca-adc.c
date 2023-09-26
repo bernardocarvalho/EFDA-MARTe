@@ -113,7 +113,7 @@ int atca_configure_pci(PCIE_DEV *pcieDev) {
     int i = 0;
     int ret = 0;
 
-    //set command register
+    //set PCI command register
     pci_read_config_word(pcieDev->pdev, PCI_COMMAND, &reg16);
     PDEBUG("%s pci_config word 0x%04X.\n", DRV_NAME, reg16);
     // printk(KERN_DEBUG "%s pci_config word 0x%04X.\n", DRV_NAME, reg16);

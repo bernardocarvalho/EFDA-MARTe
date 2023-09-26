@@ -54,13 +54,9 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
 
     // PDEBUG("ioctl status Reg:0x%X, cmd: 0x%X, 0x%08X\n", sReg.reg32, cmd, PCIE_ATCA_IOCT_ACQ_DISABLE);
 
-
-    //extract the type and number bitfields, and don't decode
-    //wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok()
-    if (_IOC_TYPE(cmd) != PCIE_ATCA_ADC_IOC_MAGIC)
-        return -ENOTTY;
-    if (_IOC_NR(cmd) > PCIE_ATCA_ADC_IOC_MAXNR)
-        return -ENOTTY;
+    /* don't even decode wrong cmds: better returning  ENOTTY than EFAULT */
+    if (_IOC_TYPE(cmd) != PCIE_ATCA_ADC_IOC_MAGIC) return -ENOTTY;
+    if (_IOC_NR(cmd) > PCIE_ATCA_ADC_IOC_MAXNR) return -ENOTTY;
 
     /*
      * the type is a bitmask, and VERIFY_WRITE catches R/W
@@ -79,8 +75,14 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
         case PCIE_ATCA_ADC_IOCT_ACQ_ENABLE:
             //EnableATCApcieAcquisition();
             commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
+            PDEBUG("%s ioctl ACQ_ENA commandReg: 0x%08X.\n", DRV_NAME, commandReg.reg32);
             commandReg.cmdFlds.STRG = 0;
             iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
+            ioread32((void*) & pcieDev->pHregs->command);
+            commandReg.cmdFlds.STRG = 1;
+            iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
+            commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
+            PDEBUG("%s ioctl ACQ_ENA commandReg: 0x%08X.\n", DRV_NAME, commandReg.reg32);
             break;
         case PCIE_ATCA_ADC_IOCT_ACQ_DISABLE:
             //DisableATCApcieAcquisition();
@@ -121,6 +123,7 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
                tempValue = 0;
                if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
                return -EFAULT;
+
                }
                tempValue = IsRTMPresent(tempValue);
                if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
@@ -145,6 +148,7 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
                tempValue = GetNumberOfInputDigitalChannels(tempValue);
                if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
                return -EFAULT;
+
                }               
                break;
                case PCIE_ATCA_ADC_IOCT_N_OUT_ANA_CHANNELS:
@@ -188,12 +192,13 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
             printk("DMA_global_addr[3] = %d\n", *((u32 *)DMA_global_addr[3]));
             break;
             */
-        case PCIE_ATCA_ADC_IOCG_GET_STATUS_REG:
-            statusReg.reg32 = ioread32((void*) & pcieDev->pHregs->status);
-            PDEBUG("%s ioctl status Reg:0x%08X.\n", DRV_NAME, statusReg.reg32);
-            if(copy_to_user((void __user *)arg, &statusReg.reg32, sizeof(u32)))
+        case PCIE_ATCA_ADC_IOCG_STATUS_REG:
+            tempValue = ioread32((void*) & pcieDev->pHregs->status);
+            PDEBUG("%s ioctl status Reg:0x%08X.\n", DRV_NAME, tempValue);
+            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
                 return -EFAULT;
             break;
+
         default:  /* redundant, as cmd was checked against MAXNR */
             return -ENOTTY;
 
