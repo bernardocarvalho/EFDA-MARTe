@@ -41,12 +41,11 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
     int err = 0, retval = 0;
     u32 tempValue = 0;
 
-    PCIE_DEV *pcieDev; /* for device information */
+    //PCIE_DEV *pcieDev; /* for device information */
+    /* retrieve the device information  */
+    PCIE_DEV *pcieDev = (PCIE_DEV *)filp->private_data;
     COMMAND_REG commandReg;
     STATUS_REG statusReg;
-
-    /* retrieve the device information  */
-    pcieDev = (PCIE_DEV *)filp->private_data;
 
     statusReg.reg32 = ioread32((void*) &pcieDev->pHregs->status);
 
@@ -75,7 +74,7 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
         case PCIE_ATCA_ADC_IOCT_ACQ_ENABLE:
             //EnableATCApcieAcquisition();
             commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
-            PDEBUG("%s ioctl ACQ_ENA commandReg: 0x%08X.\n", DRV_NAME, commandReg.reg32);
+            //PDEBUG("%s ioctl ACQ_ENA commandReg: 0x%08X.\n", DRV_NAME, commandReg.reg32);
             commandReg.cmdFlds.STRG = 0;
             iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
             ioread32((void*) & pcieDev->pHregs->command);
@@ -129,6 +128,7 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
                if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
                return -EFAULT;
                }
+    PCIE_DEV *pcieDev = (PCIE_DEV *)filp->private_data;
                break;
                case PCIE_ATCA_ADC_IOCT_N_IN_ANA_CHANNELS:
                tempValue = 0;
@@ -194,7 +194,7 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
             */
         case PCIE_ATCA_ADC_IOCG_STATUS_REG:
             tempValue = ioread32((void*) & pcieDev->pHregs->status);
-            PDEBUG("%s ioctl status Reg:0x%08X.\n", DRV_NAME, tempValue);
+            PDEBUGG("%s ioctl status Reg:0x%08X.\n", DRV_NAME, tempValue);
             if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
                 return -EFAULT;
             break;

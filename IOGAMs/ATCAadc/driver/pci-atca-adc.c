@@ -47,6 +47,7 @@
 #error "No KERNEL_VERSION macro! Stopping."
 #endif
 
+
 #ifndef LINUX_VERSION_CODE
 #error "No LINUX_VERSION_CODE macro! Stopping."
 #endif
@@ -66,7 +67,7 @@ static int current_board      = 0; // -1;
 //#define CHAR_DEVICE_NAME            "pcieATCAAdc"
 //static int master_board_index = -1;
 //static int DMA_NBYTES         = 0;
-static int dma_n_bytes         = 0;
+//static int dma_n_bytes         = 0;
 // Global DMA address
 //int DMA_global_addr[MAX_BOARDS * DMA_BUFFS];
 
@@ -88,16 +89,16 @@ int DIO_addr[MAX_DEVICES * N_DIOS_PER_BOARD];
 /*   Function prototypes          */
 long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
 /*
-static int SlotNumberToBoardIndex(int slotNum) {
-    int i = 0;
-    for (i = 0; i < MAX_DEVICES; i++) {
-        if (board_slot_numbers[i] == slotNum) {
-            return i;
-        }
-    }
-    return -1;
-}
-*/
+   static int SlotNumberToBoardIndex(int slotNum) {
+   int i = 0;
+   for (i = 0; i < MAX_DEVICES; i++) {
+   if (board_slot_numbers[i] == slotNum) {
+   return i;
+   }
+   }
+   return -1;
+   }
+   */
 //****************************
 //* DMA management functions *
 //****************************
@@ -165,6 +166,7 @@ int reset_board(PCIE_DEV *pcieDev) {
             PDEBUG("%s reset at %d\n", DRV_NAME, i);
             break;
         }
+        int pcieAdc_open(struct inode *inode, struct file *filp);
     }
     PDEBUG("%s reset at %d, sReg: 0x%08X\n", DRV_NAME, i, statusReg.reg32);
     return 0;
@@ -191,7 +193,7 @@ int setup_dma(PCIE_DEV *pcieDev) {
         memset((void*) (pcieDev->dmaIO.dmaBuffer[i].addr_v), 0,
                 pcieDev->dmaIO.buf_size);
     }
-     return 0;
+    return 0;
 }
 
 int cleanup_dma(PCIE_DEV *pcieDev) {
@@ -212,18 +214,18 @@ int cleanup_dma(PCIE_DEV *pcieDev) {
 
 //device open
 int _open(struct inode *inode, struct file *filp) {
-     PCIE_DEV *pcieDev;   /* device information */
+    PCIE_DEV *pcieDev;   /* device information */
 
-     /** retrieve the device information  */
-     pcieDev = container_of(inode->i_cdev,  PCIE_DEV, cdev);
-     if (down_interruptible(&pcieDev->open_sem))
-         return -ERESTARTSYS;
+    /** retrieve the device information  */
+    pcieDev = container_of(inode->i_cdev,  PCIE_DEV, cdev);
+    if (down_interruptible(&pcieDev->open_sem))
+        return -ERESTARTSYS;
 
-     filp->private_data = pcieDev; //for other methods
-     //atomic_set(&pciDev->rd_condition, 0); // prepare to read *****************************
-     up(&pcieDev->open_sem);
-     //
-     //
+    filp->private_data = pcieDev; //for other methods
+    //atomic_set(&pciDev->rd_condition, 0); // prepare to read *****************************
+    up(&pcieDev->open_sem);
+    //
+    //
     printk(KERN_INFO "pci-atca-adc device driver access opened\n");
     return 0;
 }
@@ -241,20 +243,84 @@ int _release(struct inode *inode, struct file *filp) {
     printk(KERN_INFO "pci-atca-adc device driver access closed(released)\n");
     return 0;
 }
+//ssize_t scullc_read (struct file *filp, char __user *buf, size_t count,
+//                loff_t *f_pos)
+ssize_t atca_read (struct file *filp, char __user *buf, size_t count,
+        loff_t *f_pos)
+{
+    //PCIE_DEV *pcieDev; /* for device information */
+    ssize_t retval = 0;
+    //COMMAND_REG commandReg;
+    //STATUS_REG statusReg;
+
+    PDEBUG("%s atca_read.\n", DRV_NAME);
+    /* retrieve the device information  */
+    PCIE_DEV *pcieDev = (PCIE_DEV *)filp->private_data;
+
+    if (mutex_lock_interruptible (&pcieDev->lock))
+        return -ERESTARTSYS;
+
+    mutex_unlock(&pcieDev->lock);
+
+    *f_pos += count;
+    return count;
+    /*
+nothing:
+    mutex_unlock(&pcieDev->lock);
+    return retval;
+    */
+}
+
+ssize_t atca_write(struct file *filp, const char __user *buf,
+        size_t count, loff_t *f_pos)
+{
+    PCIE_DEV *pcieDev = (PCIE_DEV *)filp->private_data;
+
+    PDEBUG("%s atca_write.\n", DRV_NAME);
+    /* only 32-bit aligned and 32-bit multiples */
+    if (*f_pos & 3)
+        return -EPROTO;
+    //	iowrite32(w, reg);
+    *f_pos += 4;
+    return 4;
+}
+
+/* maps the PCIe BAR into user space for memory-like access using mmap() */
+int atca_mmap(struct file *filp, struct vm_area_struct *vma)
+{
+    //struct inode *inode = filp->f_dentry->d_inode;
+    /* retrieve the device information  */
+    PCIE_DEV *pcieDev = (PCIE_DEV *)filp->private_data;
+    unsigned long off;
+    unsigned long phys;
+    unsigned long vsize;
+    unsigned long psize;
+    int rv;
+    PDEBUG("%s atca_mmap.\n", DRV_NAME);
+    /* refuse to map if order is not 0 */
+    //return -ENODEV;
+    off = vma->vm_pgoff << PAGE_SHIFT;
+    vsize = vma->vm_end - vma->vm_start;
+
+    /* refuse to map if order is not 0 */
+    return 0;
+}
+
 struct file_operations _fops = {
-    .owner      = THIS_MODULE,
-    // read =   _pcie_read,
-    // write *   _pcie_write,
+    .owner      =   THIS_MODULE,
+    .read       =   atca_read,
+    .write      =   atca_write,
+    .mmap       =   atca_mmap,
     .unlocked_ioctl  = pci_atca_adc_ioctl,
-    .open       =  _open,
-    .release    = _release
+    .open       =   _open,
+    .release    =   _release
 };
 
-static unsigned char atca_adc_get_revision(struct pci_dev *dev)
+static unsigned char atca_adc_get_revision(struct pci_dev *pdev)
 {
     u8 revision;
 
-    pci_read_config_byte(dev, PCI_REVISION_ID, &revision);
+    pci_read_config_byte(pdev, PCI_REVISION_ID, &revision);
     return revision;
 }
 
@@ -321,7 +387,7 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
     int _ret = 0;
     PCIE_DEV *pcieDev = NULL;
     //COMMAND_REG commandReg;
-   // DMA_REG dmaReg;
+    // DMA_REG dmaReg;
 
     //allocate the device instance block
     pcieDev = kzalloc(sizeof (PCIE_DEV), GFP_KERNEL);
@@ -365,6 +431,7 @@ static int _probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
     //init_MUTEX(&pcieDev->open_sem);
     sema_init(&pcieDev->open_sem, 1);
+    mutex_init(&pcieDev->lock);
     //init spinlock
     spin_lock_init(&pcieDev->irq_lock);
 

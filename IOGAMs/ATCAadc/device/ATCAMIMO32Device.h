@@ -14,6 +14,9 @@
 #define DMA_SIZE (4194304/8)
 #define NUM_CHAN 32
 
+#define MAP_SIZE  (4096*4) //32768UL //  (32*1024UL)
+//#define MAP_MASK (MAP_SIZE - 1)
+
 //#define DUMMYMODE
 //#define DEBUG
 
@@ -40,6 +43,8 @@ namespace atca
             virtual ~ATCAMIMO32Device();
             int open(char *deviceName);
             int close();
+            size_t read(void *buf, size_t count);
+            size_t write(void *buf, size_t count);
             //int setup(bool softTrigger, uint32_t readTimeout, bool chopped,
             //        uint16_t chopperFreq = 1000);
 /*            string getDeviceName()
@@ -61,8 +66,9 @@ namespace atca
         private:
             //char deviceName[64];
             int deviceHandle;
+            void* mapBase;
             //bool useRTReadThread;
-            bool softTrigger;
+            //bool softTrigger;
             uint8_t* dmaBuffer;
             uint64_t dmaBufferSize;
             //  uint64_t dmaBufferOffset;

@@ -10,6 +10,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 //#include <string>
 //#include <cstring>
 #include <iostream>
@@ -18,12 +19,14 @@
 #include <errno.h>
 //#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>  // For mmap()
 
 #include "ATCAMIMO32Device.h"
 #include "pci-atca-adc-ioctl.h"
 
 namespace atca {
     ATCAMIMO32Device::ATCAMIMO32Device(uint32_t bufferSize): //, bool useRTReadThread) :
+        deviceHandle(0), mapBase(NULL),
         isDeviceOpen(false), dmaReadThread(0), dmaReadLoopActive(false)
     {
         dmaBufferSize = bufferSize ;// * 1024LL * 1024LL;
@@ -58,10 +61,31 @@ namespace atca {
 #ifdef DUMMYMODE
         deviceHandle = 0;
 #else
-        deviceHandle = ::open(deviceName, O_RDONLY);
+        //deviceHandle = ::open(deviceName, O_RDONLY);
+        deviceHandle = ::open(deviceName, O_RDWR);
 #endif
         if (deviceHandle == -1)
             return -1;
+
+        //::mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, deviceHandle, 0);
+        //void *mmap(void *addr, size_t length, int prot, int flags,
+//                  int fd, off_t offset);
+
+        mapBase = ::mmap(0, MAP_SIZE, PROT_READ, MAP_SHARED, deviceHandle, 0);
+
+         char errBuf[ 256 ];
+        if (mapBase == MAP_FAILED)
+        {
+            //::close(deviceHandle);
+            std::cerr << "MMAP Failed " << mapBase << ", errno: " << 
+                strerror_r(errno, errBuf, 256) << std::endl;
+            //std::cerr << "MMAP Failed, closing device" << mapBase << std::endl;
+            //deviceHandle = -1;
+#ifdef DEBUG
+            //fprintf(stderr, "Error Mapping Device name = %s\n", devname);
+#endif
+            //return EXIT_FAILURE; //MAP_FAILED;
+        }
         isDeviceOpen = true;
         return 0;
     }
@@ -72,17 +96,30 @@ namespace atca {
         if(!isDeviceOpen) {
             return EXIT_FAILURE;
         }
-        isDeviceOpen = false;
 
+        //::munmap(mapBase, MAP_SIZE);
         errno = 0;
 #ifndef DUMMYMODE
+        /*close() returns zero on success.  On error, -1 is returned, and errno is set appropriately.*/
         result = ::close(deviceHandle);
 #endif
 
-        //if (result == 0)
-        deviceHandle = -1;
+        if (result)
+            return errno;
 
-        return errno;
+        deviceHandle = -1;
+        isDeviceOpen = false;
+        return result;
+
+    }
+
+    size_t ATCAMIMO32Device::read(void *buf, size_t count)
+    {
+        if(!isDeviceOpen) {
+            return EBADF;
+        }
+        size_t result  = ::read(deviceHandle, buf, count);
+        return result;
     }
 
     int ATCAMIMO32Device::readStatus(uint32_t* statusp)
@@ -109,7 +146,15 @@ namespace atca {
         }
 //#ifndef DUMMYMODE
         int result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCT_ACQ_DISABLE);
+/*
+        int buffInt[2];
+        int rc = ::read(deviceHandle, buffInt, 4);
+        if(rc<0) std::cerr << "read() Failed, " << rc << std::endl;
+        buffInt[0] = 1;
+        rc = ::write(deviceHandle, buffInt, 4);
+        if(rc<0) std::cerr << "write() Failed, " << rc << std::endl;
 //#endif
+*/
         return result;
     }
 

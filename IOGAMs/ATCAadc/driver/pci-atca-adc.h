@@ -257,11 +257,12 @@ typedef struct _PCIE_HREGS {
 } PCIE_HREGS;
 
 typedef struct _PCIE_DEV {
+    struct mutex lock;     /* Mutual exclusion */
     struct cdev cdev;       //-- linux char device structure
     dev_t devno;            //-- char device number
     struct device *dev;
     struct pci_dev *pdev;   //- pci device
-    unsigned char irq;
+    //unsigned char irq;
     spinlock_t irq_lock;
     unsigned int counter;
     unsigned int counter_hw;
@@ -285,6 +286,7 @@ typedef struct _PCIE_DEV {
     // buffer struct for read() ops
     READ_BUF bufRD; 
     PCIE_HREGS *pHregs;
+    int mapRegs[128];
 } PCIE_DEV ;
 
 /**
@@ -299,8 +301,6 @@ pci_ers_result_t pcieAdc_slot_reset(struct pci_dev *pdev);
 void pcieAdc_resume(struct pci_dev *pdev);
 ssize_t pcieAdc_read(struct file *filp, char *buf, size_t count, loff_t *ptr);
 ssize_t pcieAdc_write(struct file *file, const char *buf, size_t count, loff_t * ppos);
-int pcieAdc_release(struct inode *inode, struct file *filp);
-int pcieAdc_open(struct inode *inode, struct file *filp);
 irqreturn_t pcieAdc_handler(unsigned irq, void* dev_id);
 int pcieAdc_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg);
 int pcieAdc_probe(struct pci_dev *pdev, const struct pci_device_id *id);
