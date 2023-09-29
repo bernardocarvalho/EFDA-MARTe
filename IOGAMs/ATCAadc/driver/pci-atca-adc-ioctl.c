@@ -32,6 +32,7 @@
 #include <linux/pci.h>
 //#include <linux/kernel.h>
 #include <linux/uaccess.h>
+#include <linux/delay.h>
 
 #include "pci-atca-adc.h"
 #include "pci-atca-adc-ioctl.h"
@@ -78,6 +79,11 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
             commandReg.cmdFlds.STRG = 0;
             iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
             ioread32((void*) & pcieDev->pHregs->command);
+            commandReg.cmdFlds.DMAE = 1;
+            commandReg.cmdFlds.ACQE = 1;
+            commandReg.cmdFlds.DMAiE = 0;
+            commandReg.cmdFlds.ERRiE = 0;
+            udelay(100);
             commandReg.cmdFlds.STRG = 1;
             iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
             commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
@@ -93,10 +99,10 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
             commandReg.cmdFlds.ERRiE = 0;
             iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
             PDEBUG("%s ioctl ACQ_DIS commandReg: 0x%08X.\n", DRV_NAME, commandReg.reg32);
+            break;
+    /*
             //PCIE_WRITE32(commandReg.reg32, (void*) command_register_addr[master_board_index]);
 
-            break;
-            /*
                case PCIE_ATCA_ADC_IOCT_NUM_BOARDS:
                tempValue = GetNumberOfBoards();
                if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
@@ -128,7 +134,6 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
                if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
                return -EFAULT;
                }
-    PCIE_DEV *pcieDev = (PCIE_DEV *)filp->private_data;
                break;
                case PCIE_ATCA_ADC_IOCT_N_IN_ANA_CHANNELS:
                tempValue = 0;
@@ -195,6 +200,12 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
         case PCIE_ATCA_ADC_IOCG_STATUS_REG:
             tempValue = ioread32((void*) & pcieDev->pHregs->status);
             PDEBUGG("%s ioctl status Reg:0x%08X.\n", DRV_NAME, tempValue);
+            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
+                return -EFAULT;
+            break;
+        case PCIE_ATCA_ADC_IOCG_HWCOUNTER_REG:
+            tempValue = ioread32((void*) & pcieDev->pHregs->hwcounter);
+            PDEBUG("%s ioctl hwcounter Reg:0x%08X.\n", DRV_NAME, tempValue);
             if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
                 return -EFAULT;
             break;

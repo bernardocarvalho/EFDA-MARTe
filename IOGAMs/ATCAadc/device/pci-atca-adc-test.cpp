@@ -8,7 +8,7 @@
  * LICENSE file in the root directory of this source tree)
  */
 //#include <stdio.h>
-//#include <unistd.h>
+#include <unistd.h>
 //#include <fcntl.h>
 //#include <stdlib.h>
 #include <iostream>
@@ -26,7 +26,7 @@ namespace atca_test
     //    int numberOfAcquisitionRounds = 0;
     int deviceNumber = 0;
     int deviceHandle;
-    uint32_t statusReg;
+    uint32_t statusReg, hwcounterReg;
 
     int runTest(int argc, char* argv[]) {
 
@@ -47,6 +47,11 @@ namespace atca_test
         
         if(rc = device.enableAcquisition())
             std::cerr << "Device EN ACQ ioctl Error: "<< rc << std::endl;
+        device.readHwCounter(&hwcounterReg);
+        std::cout << "Device hwcounterReg: "<< hwcounterReg << std::endl;
+        usleep(1000);
+        device.readHwCounter(&hwcounterReg);
+        std::cout << "Device hwcounterReg: "<< hwcounterReg << std::endl;
 
         if(rc = device.disableAcquisition())
             std::cerr << "Device DIS ACQ ioctl  Error: "<< rc << std::endl;

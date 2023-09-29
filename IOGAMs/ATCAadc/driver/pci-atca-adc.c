@@ -143,13 +143,13 @@ int atca_configure_pci(PCIE_DEV *pcieDev) {
     return ret;
 }
 /*
-void setup_atca_parameters(PCIE_DEV *pcieDev) {
-    STATUS_REG statusReg;
-    statusReg.reg32 = ioread32((void*) & pcieDev->pHregs->status);
-    firmwareRevision = statusReg.statFlds.revID;
-    PDEBUG("%s setup, firmware: 0x%02X\n", DRV_NAME, firmwareRevision);
-}
-*/
+   void setup_atca_parameters(PCIE_DEV *pcieDev) {
+   STATUS_REG statusReg;
+   statusReg.reg32 = ioread32((void*) & pcieDev->pHregs->status);
+   firmwareRevision = statusReg.statFlds.revID;
+   PDEBUG("%s setup, firmware: 0x%02X\n", DRV_NAME, firmwareRevision);
+   }
+   */
 int reset_board(PCIE_DEV *pcieDev) {
     STATUS_REG statusReg;
     int i;
@@ -166,7 +166,7 @@ int reset_board(PCIE_DEV *pcieDev) {
             PDEBUG("%s reset at %d\n", DRV_NAME, i);
             break;
         }
-//        int pcieAdc_open(struct inode *inode, struct file *filp);
+        //        int pcieAdc_open(struct inode *inode, struct file *filp);
     }
     PDEBUG("%s reset at %d, sReg: 0x%08X\n", DRV_NAME, i, statusReg.reg32);
     return 0;
@@ -176,7 +176,8 @@ int reset_board(PCIE_DEV *pcieDev) {
 int setup_dma(PCIE_DEV *pcieDev) {
     int i = 0;
 
-    pcieDev->dmaIO.buf_size = DMA_NBYTES; // 176.
+    //pcieDev->dmaIO.buf_size = DMA_NBYTES; // 176.
+    pcieDev->dmaIO.buf_size = PAGE_SIZE; // 4096
 
     // allocating DMA buffers
     for (i = 0; i < DMA_BUFFS; i++) {
@@ -193,13 +194,13 @@ int setup_dma(PCIE_DEV *pcieDev) {
         memset((void*) (pcieDev->dmaIO.dmaBuffer[i].addr_v), 0,
                 pcieDev->dmaIO.buf_size);
     }
- // assign addresses to board
+    // assign addresses to board
     pcieDev->flags = 0;
     for (i = 0; i < DMA_BUFFS; i++) {
         iowrite32(pcieDev->dmaIO.dmaBuffer[i].addr_hw, (void*) & pcieDev->pHregs->HwDmaAddr[i]);
     }
     pcieDev->counter = ioread32((void*) & pcieDev->pHregs->hwcounter);
- //   commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
+    //   commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
     PDEBUG("%s setup_dma.\n", DRV_NAME);
 
     return 0;
@@ -271,13 +272,13 @@ ssize_t atca_read (struct file *filp, char __user *buf, size_t count,
         return -ERESTARTSYS;
 
     if (count |= 4)
-		goto nothing;
+        goto nothing;
 
     hwcounter = ioread32((void*) &pcieDev->pHregs->hwcounter);
     if (copy_to_user (buf, &hwcounter, count)) {
-		retval = -EFAULT;
-		goto nothing;
-	}
+        retval = -EFAULT;
+        goto nothing;
+    }
 
     mutex_unlock(&pcieDev->lock);
 
@@ -311,45 +312,65 @@ int atca_mmap(struct file *filp, struct vm_area_struct *vma)
     unsigned long off;
     unsigned long phys;
     unsigned long vsize;
-    unsigned long psize;
-    int rv;
-    PDEBUG("%s atca_mmap.\n", DRV_NAME);
+    //unsigned long psize;
+    unsigned long start;
+    int i, rv;
+    PDEBUGG("%s atca_mmap.\n", DRV_NAME);
     pcieDev = (PCIE_DEV *)filp->private_data;
 
     /* refuse to map if order is not 0 */
     //return -ENODEV;
     off = vma->vm_pgoff << PAGE_SHIFT;
-/* BAR physical address */
-        //pcieDev->memIO[i].start = pci_resource_start(pcieDev->pdev, i);
-	//phys = pci_resource_start(xdev->pdev, xcdev->bar) + off;
-	phys = pcieDev->memIO[1].start + off;
+    /* BAR physical address */
+    //pcieDev->memIO[i].start = pci_resource_start(pcieDev->pdev, i);
+    //phys = pci_resource_start(xdev->pdev, xcdev->bar) + off;
+    //phys = pcieDev->memIO[1].start + off;
 
-    vsize = vma->vm_end - vma->vm_start;
-    psize = pcieDev->dmaIO.buf_size;
-    
-    if (vsize > psize)
-		return -EINVAL;
-	/*
-	 * pages must not be cached as this would result in cache line sized
-	 * accesses to the end point
-	 */
-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
-	/*
-	 * prevent touching the pages (byte access) for swap-in,
-	 * and prevent the pages from being swapped out
-	 */
-//#define VMEM_FLAGS (VM_IO | VM_DONTEXPAND | VM_DONTDUMP)
-//Prevent the VMA from swapping out:
-	vma->vm_flags |= (VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
-	/* make MMIO accessible to user space */
-	rv = io_remap_pfn_range(vma, vma->vm_start, phys >> PAGE_SHIFT,
-			vsize, vma->vm_page_prot);
-	PDEBUG("vma=0x%p, vma->vm_start=0x%lx, phys=0x%lx, size=%lu = %d\n",
-		vma, vma->vm_start, phys >> PAGE_SHIFT, vsize, rv);
+    //vsize = vma->vm_end - vma->vm_start;
+    /* psize = PAGE_SIZE; //pcieDev->dmaIO.buf_size; 
+       if (vsize > psize) {
+       PDEBUG(" vsize %d, psize: %d\n", vsize, psize);
+       return -EINVAL;
+       }
+       */
+    /*
+     * pages must not be cached as this would result in cache line sized
+     * accesses to the end point
+     */
+    vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+    /*
+     * prevent touching the pages (byte access) for swap-in,
+     * and prevent the pages from being swapped out
+     */
+    //#define VMEM_FLAGS (VM_IO | VM_DONTEXPAND | VM_DONTDUMP)
+    //Prevent the VMA from swapping out:
+    vma->vm_flags |= (VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
+    /* make dmaBuff accessible to user space 
+       int remap_pfn_range(struct vm_area_struct *vma,
+       unsigned long addr,
+       unsigned long pfn,
+       unsigned long size, pgprot_t flags);
+       */
+    start = vma->vm_start;
+    vsize = PAGE_SIZE;
+    for(i = 0; i < DMA_BUFFS; i++){
+        phys =  virt_to_phys(pcieDev->dmaIO.dmaBuffer[i].addr_v);
+        rv = io_remap_pfn_range(vma,
+                start,
+                phys >> PAGE_SHIFT,
+                vsize,
+                vma->vm_page_prot);
+        if(rv) {
+            printk(KERN_ERR "mmap failed: %d\n", rv);
+            return -EAGAIN;
+        }
+        start += PAGE_SIZE;
+    }
+    PDEBUG("vma=0x%p, vma->vm_start=0x%lx, phys=0x%lx, size=%lu = %d\n",
+            vma, vma->vm_start, phys >> PAGE_SHIFT, vsize, rv);
 
-	if (rv)
-		return -EAGAIN;
-	return 0;
+    //PDEBUG("io_remap OK\n");
+    return 0;
     /* refuse to map if order is not 0 */
     //return 0;
 }

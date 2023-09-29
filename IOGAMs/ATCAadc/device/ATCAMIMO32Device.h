@@ -11,10 +11,12 @@
 #ifndef ATCAMIMO32DEVICE_H_
 #define ATCAMIMO32DEVICE_H_
 
-#define DMA_SIZE (4194304/8)
-#define NUM_CHAN 32
+#define DMA_SIZE    (4194304/8)
+#define NUM_CHAN    32
+#define DMA_BUFFS   4 //The number of DMA buffers, as in "pci-atca-adc.h"
 
-#define MAP_SIZE  (4096*4) //32768UL //  (32*1024UL)
+
+#define MAP_SIZE  (4096 * DMA_BUFFS) // PAGE_SIZE 32768UL //  (32*1024UL)
 //#define MAP_MASK (MAP_SIZE - 1)
 
 //#define DUMMYMODE
@@ -58,6 +60,7 @@ namespace atca
    */
             //int getSampleCounter(uint16_t* counter);
             int readStatus(uint32_t* statusp);
+            int readHwCounter(uint32_t* counterp);
 
             int enableAcquisition();
             int disableAcquisition();

@@ -28,7 +28,7 @@
  * IOCTL definitions
  */
 #define PCIE_ATCA_ADC_IOC_MAGIC 'l'  // /* Please use a different 8-bit number in your code */
-/*See  /Documentation/ioctl-number.txt*/
+/*See  /Documentation/ioctl-number.txt */
 
 /*
  * S means "Set" through a ptr,
@@ -54,8 +54,9 @@
 #define PCIE_ATCA_ADC_IOCS_N_OUT_ANA_CHANNELS   _IOWR(PCIE_ATCA_ADC_IOC_MAGIC, 12, u_int32_t)
 #define PCIE_ATCA_ADC_IOCS_N_OUT_DIG_CHANNELS   _IOWR(PCIE_ATCA_ADC_IOC_MAGIC, 13, u_int32_t)
 #define PCIE_ATCA_ADC_IOCG_STATUS_REG           _IOR(PCIE_ATCA_ADC_IOC_MAGIC, 14, u_int32_t)
+#define PCIE_ATCA_ADC_IOCG_HWCOUNTER_REG        _IOR(PCIE_ATCA_ADC_IOC_MAGIC, 15, u_int32_t)
 
-#define PCIE_ATCA_ADC_IOC_MAXNR                 14
+#define PCIE_ATCA_ADC_IOC_MAXNR                 15
 
 #endif /* _PCIE_ATCA_ADC_IOCTL_H_ */
 

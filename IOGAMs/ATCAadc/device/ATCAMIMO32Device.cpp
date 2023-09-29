@@ -131,12 +131,25 @@ namespace atca {
         return result;
     }
 
+    int ATCAMIMO32Device::readHwCounter(uint32_t* counterp)
+    {
+        if(!isDeviceOpen) {
+            return EXIT_FAILURE;
+        }
+        int result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCG_HWCOUNTER_REG, counterp);
+        return result;
+    }
+
     int ATCAMIMO32Device::enableAcquisition()
     {
         if(!isDeviceOpen) {
             return EXIT_FAILURE;
         }
         int result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCT_ACQ_ENABLE);
+        usleep(1000);
+        int32_t * pVal = (int* ) mapBase;
+        for (int i = 0 ; i < 4; i++) printf("%d: 0x%08X\t", i, pVal[i]);
+        printf("\n");
         return result;
     }
     int ATCAMIMO32Device::disableAcquisition()
