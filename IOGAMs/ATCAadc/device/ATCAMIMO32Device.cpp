@@ -152,6 +152,14 @@ namespace atca {
         printf("\n");
         return result;
     }
+    int ATCAMIMO32Device::softTrigger()
+    {
+        if(!isDeviceOpen) {
+            return EXIT_FAILURE;
+        }
+        int result = ::ioctl(deviceHandle, PCIE_ATCA_ADC_IOCT_SOFT_TRG);
+        return result;
+    }
     int ATCAMIMO32Device::disableAcquisition()
     {
         if(!isDeviceOpen) {

@@ -100,84 +100,101 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
             iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
             PDEBUG("%s ioctl ACQ_DIS commandReg: 0x%08X.\n", DRV_NAME, commandReg.reg32);
             break;
-    /*
+        case PCIE_ATCA_ADC_IOCT_SET_EXT_CLK_TRG:
+            //SetATCApcieExternalTriggerAndClock(tempValue);
+            commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
+            commandReg.cmdFlds.EXT_TRG_CLK = 1;
+            iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
+            PDEBUG("%s ioctl SET_EXT_CLK_TRG commandReg: 0x%08X.\n", DRV_NAME, commandReg.reg32);
+            break;
+        case PCIE_ATCA_ADC_IOCT_RESET_EXT_CLK_TRG:
+            commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
+            commandReg.cmdFlds.EXT_TRG_CLK = 0;
+            iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
+            PDEBUG("%s ioctl RESET_EXT_CLK_TRG commandReg: 0x%08X.\n", DRV_NAME, commandReg.reg32);
+            break;
+        case PCIE_ATCA_ADC_IOCT_SOFT_TRG:
+            //SendSoftwareTrigger();
+            commandReg.reg32 = ioread32((void*) & pcieDev->pHregs->command);
+            commandReg.cmdFlds.STRG = 1;
+            iowrite32(commandReg.reg32, (void*) & pcieDev->pHregs->command);
+            PDEBUG("%s ioctl SOFT_TRG commandReg: 0x%08X.\n", DRV_NAME, commandReg.reg32);
+            break;
+            /*
             //PCIE_WRITE32(commandReg.reg32, (void*) command_register_addr[master_board_index]);
 
-               case PCIE_ATCA_ADC_IOCT_NUM_BOARDS:
-               tempValue = GetNumberOfBoards();
-               if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
-               return -EFAULT;
-               break;
-               case PCIE_ATCA_ADC_IOCT_MASTER_SLOT_NUM:
-               tempValue = GetMasterBoardSlotNumber();
-               if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
-               return -EFAULT;
-               }
-               break;
-               case PCIE_ATCA_ADC_IOCT_SET_EXT_CLK_TRG:
-               tempValue = 0;
-               if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
-               return -EFAULT;
-               }
-               if(tempValue < 0 || tempValue > 1){
-               return -EFAULT;
-               }
-               SetATCApcieExternalTriggerAndClock(tempValue);
-               break;
-               case PCIE_ATCA_ADC_IOCT_IS_RTM_PRESENT:
-               tempValue = 0;
-               if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
-               return -EFAULT;
-
-               }
-               tempValue = IsRTMPresent(tempValue);
-               if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
-               return -EFAULT;
-               }
-               break;
-               case PCIE_ATCA_ADC_IOCT_N_IN_ANA_CHANNELS:
-               tempValue = 0;
-               if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
-               return -EFAULT;
-               }
-               tempValue = GetNumberOfInputAnalogChannels(tempValue);
-               if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
-               return -EFAULT;
-               }
-               break;
-               case PCIE_ATCA_ADC_IOCT_N_IN_DIG_CHANNELS:
-               tempValue = 0;
-               if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
-               return -EFAULT;
-               }
-               tempValue = GetNumberOfInputDigitalChannels(tempValue);
-               if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
-               return -EFAULT;
-
-               }               
-               break;
-               case PCIE_ATCA_ADC_IOCT_N_OUT_ANA_CHANNELS:
-               tempValue = 0;
-               if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
-               return -EFAULT;
-               }
-               tempValue = GetNumberOfAnalogueOutputChannels(tempValue);
-               if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
-               return -EFAULT;
-               }
-               break;
-               case PCIE_ATCA_ADC_IOCT_N_OUT_DIG_CHANNELS:
-               tempValue = 0;
-               if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
-               return -EFAULT;
-               }
-               tempValue = GetNumberOfDigitalOutputChannels(tempValue);
-               if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
-               return -EFAULT;
-               }
+            case PCIE_ATCA_ADC_IOCT_NUM_BOARDS:
+            tempValue = GetNumberOfBoards();
+            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
+            return -EFAULT;
             break;
-        case PCIE_ATCA_ADC_IOCT_SEND_SOFT_TRG:
-            SendSoftwareTrigger();
+            case PCIE_ATCA_ADC_IOCT_MASTER_SLOT_NUM:
+            tempValue = GetMasterBoardSlotNumber();
+            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
+            return -EFAULT;
+            }
+            break;
+            case PCIE_ATCA_ADC_IOCT_SET_EXT_CLK_TRG:
+            tempValue = 0;
+            if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
+            return -EFAULT;
+            }
+            if(tempValue < 0 || tempValue > 1){
+            return -EFAULT;
+            }
+            SetATCApcieExternalTriggerAndClock(tempValue);
+            break;
+            case PCIE_ATCA_ADC_IOCT_IS_RTM_PRESENT:
+            tempValue = 0;
+            if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
+            return -EFAULT;
+
+            }
+            tempValue = IsRTMPresent(tempValue);
+            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
+            return -EFAULT;
+            }
+            break;
+            case PCIE_ATCA_ADC_IOCT_N_IN_ANA_CHANNELS:
+            tempValue = 0;
+            if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
+            return -EFAULT;
+            }
+            tempValue = GetNumberOfInputAnalogChannels(tempValue);
+            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
+            return -EFAULT;
+            }
+            break;
+            case PCIE_ATCA_ADC_IOCT_N_IN_DIG_CHANNELS:
+            tempValue = 0;
+            if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
+            return -EFAULT;
+            }
+            tempValue = GetNumberOfInputDigitalChannels(tempValue);
+            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
+            return -EFAULT;
+
+            }               
+            break;
+            case PCIE_ATCA_ADC_IOCT_N_OUT_ANA_CHANNELS:
+            tempValue = 0;
+            if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
+            return -EFAULT;
+            }
+            tempValue = GetNumberOfAnalogueOutputChannels(tempValue);
+            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
+            return -EFAULT;
+            }
+            break;
+            case PCIE_ATCA_ADC_IOCT_N_OUT_DIG_CHANNELS:
+            tempValue = 0;
+            if(copy_from_user(&tempValue, (void __user *)arg, sizeof(u32))){
+            return -EFAULT;
+            }
+            tempValue = GetNumberOfDigitalOutputChannels(tempValue);
+            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32))){
+                return -EFAULT;
+            }
             break;
         case PCIE_ATCA_ADC_IOCT_GET_BOARD_SLOT_NS:
             if(access_ok(VERIFY_WRITE, (void __user *)arg, GetNumberOfBoards() * sizeof(u32))){
@@ -198,20 +215,20 @@ long pci_atca_adc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
             break;
             */
         case PCIE_ATCA_ADC_IOCG_STATUS_REG:
-            tempValue = ioread32((void*) & pcieDev->pHregs->status);
-            PDEBUGG("%s ioctl status Reg:0x%08X.\n", DRV_NAME, tempValue);
-            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
-                return -EFAULT;
-            break;
+                tempValue = ioread32((void*) & pcieDev->pHregs->status);
+                PDEBUGG("%s ioctl status Reg:0x%08X.\n", DRV_NAME, tempValue);
+                if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
+                    return -EFAULT;
+                break;
         case PCIE_ATCA_ADC_IOCG_HWCOUNTER_REG:
-            tempValue = ioread32((void*) & pcieDev->pHregs->hwcounter);
-            PDEBUG("%s ioctl hwcounter Reg:0x%08X.\n", DRV_NAME, tempValue);
-            if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
-                return -EFAULT;
-            break;
+                tempValue = ioread32((void*) & pcieDev->pHregs->hwcounter);
+                PDEBUG("%s ioctl hwcounter Reg:0x%08X.\n", DRV_NAME, tempValue);
+                if(copy_to_user((void __user *)arg, &tempValue, sizeof(u32)))
+                    return -EFAULT;
+                break;
 
         default:  /* redundant, as cmd was checked against MAXNR */
-            return -ENOTTY;
+                return -ENOTTY;
 
     }
     return retval;

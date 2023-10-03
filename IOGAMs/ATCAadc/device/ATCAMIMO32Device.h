@@ -14,8 +14,6 @@
 #define DMA_SIZE    (4194304/8)
 #define NUM_CHAN    32
 #define DMA_BUFFS   4 //The number of DMA buffers, as in "pci-atca-adc.h"
-
-
 #define MAP_SIZE  (4096 * DMA_BUFFS) // PAGE_SIZE 32768UL //  (32*1024UL)
 //#define MAP_MASK (MAP_SIZE - 1)
 
@@ -34,6 +32,22 @@
 
 //using namespace std;
 
+    union STATUS_REG {
+        struct {
+            unsigned int revID: 4;
+            unsigned int : 4;
+            unsigned int master : 1;
+            unsigned int rtm : 1;
+            unsigned int slotNum : 4;
+            unsigned int : 4;
+        };
+        uint32_t r32;
+    };
+    /*
+       (BTFLD(revID:4, none:4), master:1), rtm:1), slotNum:4), rsv0:2), rsv1:2),
+FSH:1), RST:1), rsv2:2), ERR1:1), ERR0:1), rsv3:2),
+FIFE:1), FIFF:1), rsv4:2), DMAC:1), ACQC:1);
+*/
 namespace atca
 {
 
@@ -64,6 +78,7 @@ namespace atca
 
             int enableAcquisition();
             int disableAcquisition();
+            int softTrigger();
             int read(int16_t* buffer, uint8_t nChannels, uint32_t nSamples);
 
         private:

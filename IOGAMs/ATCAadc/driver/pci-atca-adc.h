@@ -2,25 +2,25 @@
  * Copyright 2011 EFDA | European Fusion Development Agreement
  *
  * Licensed under the EUPL, Version 1.1 or - as soon they 
-   will be approved by the European Commission - subsequent  
-   versions of the EUPL (the "Licence"); 
+ will be approved by the European Commission - subsequent  
+ versions of the EUPL (the "Licence"); 
  * You may not use this work except in compliance with the 
-   Licence. 
+ Licence. 
  * You may obtain a copy of the Licence at: 
  *  
  * http://ec.europa.eu/idabc/eupl
  *
  * Unless required by applicable law or agreed to in 
-   writing, software distributed under the Licence is 
-   distributed on an "AS IS" basis, 
+ writing, software distributed under the Licence is 
+ distributed on an "AS IS" basis, 
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either 
-   express or implied. 
+ express or implied. 
  * See the Licence for the specific language governing 
-   permissions and limitations under the Licence. 
+ permissions and limitations under the Licence. 
  *
  * $Id: pcieAdc.h 3 2012-01-15 16:26:07Z aneto $
  *
-**/
+ **/
 
 #ifndef PCI_ATCA_ADC_H_
 #define PCI_ATCA_ADC_H_
@@ -29,25 +29,27 @@
 
 /* Minor  number is set equal to ATCA Slot Logical number  */
 /**********************************************************************************
-ATCA Slot Numbering on 14 slot Crates:
-Physical | 1  | 2  | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 |
-Logical  | 13 | 11 | 9 | 7 | 5 | 3 | 1 | 2 | 4 | 6  |  8 | 10 | 12 | 14 |
-***********************************************************************************/
+  ATCA Slot Numbering on 14 slot Crates:
+  Physical | 1  | 2  | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 |
+  Logical  | 13 | 11 | 9 | 7 | 5 | 3 | 1 | 2 | 4 | 6  |  8 | 10 | 12 | 14 |
+rsv0:8, BIG_ENDN:1, rsv00:1, CHOP_ON:1, CHOP_DEFAULT:1, CHOP_RECONSTRUCT:1, rsv01:6, //OFFSET_CALC:1, INTEGRAL_CALC:1, DAC_SHIFT:4,
+STREAME:1, rsv1:3, ACQE:1, STRG:1, TRGS:1, rsv2:1, DMAE:1, rsv4:1, ERRiE:1, DMAiE:1, ACQiE:1;
+ ***********************************************************************************/
 
 #define NODENAMEFMT "atca_ioc_%d"
 #define DRV_NAME "atca_ioc"
 //#define CHAR_DEVICE_NAME            "pcieATCAAdc"
 
 /*
-* Macros to help debugging
-*/
+ * Macros to help debugging
+ */
 #undef PDEBUG             /* undef it, just in case */
 #ifdef ATCA_DEBUG
 #  ifdef __KERNEL__
-     /* This one if debugging is on, and kernel space */
+/* This one if debugging is on, and kernel space */
 #    define PDEBUG(fmt, args...) printk( KERN_DEBUG "atca_ioc: " fmt, ## args)
 #  else
-     /* This one for user space */
+/* This one for user space */
 #    define PDEBUG(fmt, args...) fprintf(stderr, fmt, ## args)
 #  endif
 #else
@@ -91,30 +93,30 @@ Logical  | 13 | 11 | 9 | 7 | 5 | 3 | 1 | 2 | 4 | 6  |  8 | 10 | 12 | 14 |
 #define DMA_BUFFS                   4 //The number of DMA buffers
 //#define MAX_BOARDS		            12
 
-
+/*
 #ifdef __cplusplus
 extern "C"{
 #endif
-	int *GetBufferAddress(void);
-	int *GetBoardBufferAddress(int slotNum);
-	int  GetNumberOfBoards(void);
-	int  GetMasterBoardSlotNumber(void);
-	int  WriteToDAC(int board, int channel, int value);
-	int  WriteToDIO(int board, int channel, int value);
-	int  EnableATCApcieAcquisition(void);
-	int  DisableATCApcieAcquisition(void);
-	int  SetATCApcieExternalTriggerAndClock(int enabled);
-	int  IsRTMPresent(int board_idx);
-	int *GetBoardsSlotNumbers(void);
-	int  SendSoftwareTrigger(void);
-    int  GetNumberOfInputAnalogChannels(int slotNum);
-    int  GetNumberOfInputDigitalChannels(int slotNum);
-    int  GetNumberOfAnalogueOutputChannels(int slotNum);
-    int  GetNumberOfDigitalOutputChannels(int slotNum);
+    int *GetBufferAddress(void);
+    int *GetBoardBufferAddress(int slotNum);
+    int  GetNumberOfBoards(void);
+    int  GetMasterBoardSlotNumber(void);
+     int  WriteToDAC(int board, int channel, int value);
+     int  WriteToDIO(int board, int channel, int value);
+     int  EnableATCApcieAcquisition(void);
+     int  DisableATCApcieAcquisition(void);
+     int  SetATCApcieExternalTriggerAndClock(int enabled);
+     int  IsRTMPresent(int board_idx);
+     int *GetBoardsSlotNumbers(void);
+     int  SendSoftwareTrigger(void);
+     int  GetNumberOfInputAnalogChannels(int slotNum);
+     int  GetNumberOfInputDigitalChannels(int slotNum);
+     int  GetNumberOfAnalogueOutputChannels(int slotNum);
+     int  GetNumberOfDigitalOutputChannels(int slotNum);
 #ifdef __cplusplus
 }
 #endif
-
+*/
 #ifndef __cplusplus
 /**
  * The number of NOOP cycles
@@ -128,21 +130,23 @@ extern "C"{
  */
 // BITFIELDS
 #ifdef __BIG_ENDIAN_BITFIELD
- #define BTFLD(a,b) b,a
+#define BTFLD(a,b) b,a
 #else
 #define BTFLD(a,b) a, b
 #endif
 
-//TODO: remove
+/*/TODO: remove
 typedef struct _REVID_FLDS {
     u32 BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(RevId:4, TMR:1), HDR:1), DBG:1), reserved:1),none:24);
 } REVID_FLDS;
 typedef struct _STATUS_FLDS {
-	 u32 BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(
-            BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(revID:4, none:4), master:1), rtm:1), slotNum:4), rsv0:2), rsv1:2),
-               FSH:1), RST:1), rsv2:2), ERR1:1), ERR0:1), rsv3:2),
-              FIFE:1), FIFF:1), rsv4:2), DMAC:1), ACQC:1);
+    u32 BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(
+                                                BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(revID:4, none:4), master:1), rtm:1), slotNum:4), rsv0:2), rsv1:2),
+                                                    FSH:1), RST:1), rsv2:2), ERR1:1), ERR0:1), rsv3:2),
+                            FIFE:1), FIFF:1), rsv4:2), DMAC:1), ACQC:1);
 } STATUS_FLDS;
+
+
 
 
 typedef struct _STATUS_REG {
@@ -150,38 +154,64 @@ typedef struct _STATUS_REG {
     {
         u32 reg32;
 
-/*        struct _STALFD
-        {
-            u32 revId:8;
-            u32 statWrd:24;
-        } Str;*/
+                struct _STALFD
+                  {
+                  u32 revId:8;
+
+
+                  u32 statWrd:24;
+                  } Str;
         STATUS_FLDS statFlds;
         REVID_FLDS rdIdFlds;
     };
 } STATUS_REG;
 
-typedef struct _COMMAND_REG {
-    union
-    {
+   typedef struct _COMMAND_REG {
+   union
+   {
+   u32 reg32;
+   struct  {
+   u32 BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(
+   BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(
+   BTFLD(BTFLD(BTFLD(BTFLD(EXT_TRG_CLK:1, rsv0:2), ACQM:1),DQTP:2),LOAD:1),rsv1:1),CHN:2),ILVM:2),
+rsv2:6), 
+HOP:1), TOP:1),          ACQS:1), ACQT:1), ACQK:1), ACQE:1), 
+STRG:1), rsv3:1), DMAF:1), DMAE:1),         rsv4:1), ERRiE:1), DMAiE:1), ACQiE:1);
+} cmdFlds;
+};
+} COMMAND_REG;
+*/
+
+typedef struct _STATUS_REG {
+    union {
         u32 reg32;
-        struct  {
-	u32 BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(
-            BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(BTFLD(
-	    BTFLD(BTFLD(BTFLD(BTFLD(EXT_TRG_CLK:1, rsv0:2), ACQM:1),DQTP:2),LOAD:1),rsv1:1),CHN:2),ILVM:2),
-                rsv2:6), HOP:1), TOP:1), ACQS:1), ACQT:1),
-	       ACQK:1), ACQE:1), STRG:1), rsv3:1), DMAF:1), DMAE:1), rsv4:1),
-                              ERRiE:1), DMAiE:1), ACQiE:1);
+        struct  { u32    //
+                revID:4,                                       none:4,   // bits 0-7
+                    master:1, rtm:1, slotNum:4,                rsv0:2,   // bits 8-15
+                    rsv1:2, FSH:1, RST:1,       rsv2:2, ERR1:1, ERR0:1,  // bits 16-23
+                    rsv3:2, FIFE:1, FIFF:1,     rsv4:2, DMAC:1, ACQC:1;  // bits 23-31
+        } statFlds;
+    };
+} STATUS_REG;
+
+typedef struct _COMMAND_REG {
+    union {
+        u32 reg32;
+        struct  {u32    //
+            EXT_TRG_CLK:1, rsv0:2, ACQM:1,                     DQTP:2,LOAD:1,rsv1:1,    // bits 0-7
+                CHN:2,ILVM:2,                                                     rsv2:4, //  bits 8-15
+                rsv21:2,          HOP:1, TOP:1,          ACQS:1, ACQT:1, ACQK:1,  ACQE:1, //  bits 16-23
+                STRG:1, rsv3:1, DMAF:1, DMAE:1,         rsv4:1, ERRiE:1, DMAiE:1, ACQiE:1; // bits 24-31
         } cmdFlds;
     };
 } COMMAND_REG;
 
 // 32 bit reg **/
 typedef struct _DATA_PROC_REG {
-    union
-    {
+    union {
         u32 reg32;
         struct  {
-                        u32 BTFLD(BTFLD(BTFLD(BTFLD(K:4, L:6), M:7),T:14),rsv1:1);
+            u32 BTFLD(BTFLD(BTFLD(BTFLD(K:4, L:6), M:7),T:14),rsv1:1);
         } dpFlds;
     };
 } DATA_PROC_REG;
@@ -189,13 +219,13 @@ typedef struct _DATA_PROC_REG {
 /**
   32 bit reg **/
 typedef struct _DMA_REG {
-        union
+    union
     {
         u32 reg32;
         struct  {
-                        u32 BTFLD(Size:16, BuffsNumber:16);
-                } dmaFlds;
-        };
+            u32 BTFLD(Size:16, BuffsNumber:16);
+        } dmaFlds;
+    };
 } DMA_REG;
 
 /**
@@ -267,22 +297,22 @@ typedef struct _PCIE_DEV {
     unsigned int counter;
     unsigned int counter_hw;
     unsigned open_count;
-    
+
     unsigned flags;
     struct semaphore open_sem; //-- mutual exclusion semaphore
-    
+
     //Read queues
     wait_queue_head_t rd_q;
-    
+
     //read timeout
     long wt_tmout;
-    
+
     //max amount  of data stored in memory
     //unsigned long size;
-    
+
     BAR_STRUCT memIO[NUM_BARS];
     DMA_STRUCT dmaIO;
-    
+
     // buffer struct for read() ops
     READ_BUF bufRD; 
     PCIE_HREGS *pHregs;

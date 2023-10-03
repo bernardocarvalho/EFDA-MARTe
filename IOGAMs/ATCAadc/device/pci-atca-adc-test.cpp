@@ -26,12 +26,13 @@ namespace atca_test
     //    int numberOfAcquisitionRounds = 0;
     int deviceNumber = 0;
     int deviceHandle;
-    uint32_t statusReg, hwcounterReg;
-
+    uint32_t hwcounterReg;
     int runTest(int argc, char* argv[]) {
 
         char devname[64];
         int rc;
+
+        STATUS_REG sR;
 
         ATCAMIMO32Device device(1024*8); //, dataMbSize, dmaBufferSize);
         snprintf(devname, 64, ATCA_NODE_NAME_FMT, deviceNumber);
@@ -44,11 +45,13 @@ namespace atca_test
         }
         else
             std::cout << "Openned Device name = " << devname << std::endl;
-        
+
         if(rc = device.enableAcquisition())
             std::cerr << "Device EN ACQ ioctl Error: "<< rc << std::endl;
         device.readHwCounter(&hwcounterReg);
         std::cout << "Device hwcounterReg: "<< hwcounterReg << std::endl;
+        if(rc = device.softTrigger())
+            std::cerr << "Device SOFT_TRG Error: "<< rc << std::endl;
         usleep(1000);
         device.readHwCounter(&hwcounterReg);
         std::cout << "Device hwcounterReg: "<< hwcounterReg << std::endl;
@@ -56,11 +59,13 @@ namespace atca_test
         if(rc = device.disableAcquisition())
             std::cerr << "Device DIS ACQ ioctl  Error: "<< rc << std::endl;
 
-        if(device.readStatus(&statusReg))
+        if(device.readStatus(&sR.r32))
             std::cerr << "Device statusReg read Error: "<< std::endl;
         else
-            std::cout << "Device statusReg: 0x"<< std::hex << statusReg << std::endl;
-            //printf("Device statusReg: 0x%08X.\n", statusReg);
+            std::cout << "Device statusReg: 0x"<< std::hex << sR.r32 << std::endl;
+        //printf("Device statusReg: 0x%08X.\n", statusReg);
+        //sR.r32 = statusReg;
+        std::cout << "Master: "<< sR.master << ", RTM: " << sR.rtm  << ", SlotNum: " << sR.slotNum << std::endl;
         device.close();
         return EXIT_SUCCESS;
     }
