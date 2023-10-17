@@ -29,17 +29,12 @@ public:
         output                                        = NULL;
 
         param                                         = 0.0;
-        Reset();
     }
 
     /** Destructor */
     ~MinimalGAM(){
-        
     }
 
-    inline void Reset() {
-        param                                         = 0.0;
-    }
 
     /**
     * Loads GAM parameters from a CDB

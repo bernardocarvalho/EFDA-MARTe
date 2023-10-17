@@ -1,7 +1,5 @@
 
 #include "MinimalGAM.h"
-#include "MinimalGAMInputStructure.h"
-#include "MinimalGAMOutputStructure.h"
 #include "CDBExtended.h"
 
 #include "DDBInputInterface.h"
@@ -62,43 +60,46 @@ bool MinimalGAM::Initialise(ConfigurationDataBase& cdbData) {
         return False;
     }
 
+
+    cdb->MoveToFather();
     // Load parameter
             if(!cdb.ReadFloat(param, "param")){
-            AssertErrorCondition(InitialisationError, "PIDGAM %s::Initialise: param entry not found", Name());
+            AssertErrorCondition(InitialisationError, "MinimalGAM %s::Initialise: param entry not found", Name());
             return False;
-        }
-
-
-
+            }
     return True;
 }
 
 bool MinimalGAM::Execute(GAM_FunctionNumbers functionNumber) {
 
     // Get input and output data pointers
-    MinimalGAMInputStructure  *inputData  = (MinimalGAMInputStructure  *)input->Buffer();
-    MinimalGAMOutputStructure *outputData = (MinimalGAMOutputStructure *)output->Buffer();
+    input->Read();
+    float signal     = *((float *)input->Buffer());
+    float *outputBuff = (float*)  output->Buffer();
 
     // Set all the outputs to zero
-    outputData->outvar              = false;
+    float outvar = 0;
 
     switch(functionNumber) {
         case GAMPrepulse: {
+            outvar = 0; //Some error?
             // Reset everything
-            Reset();
+            // No Reset function..
         }
         default: {
             
             input->Read();
                 
-            if(inputData->signal >= 0.0) {
-                outputData->outvar          = true;
-
-                
-            } 
+            if(signal >= param) {
+                outvar = 1; 
+            }
+            else{
+                outvar = -1;
+            }
         }
     }
-    
+    *outputBuff = outvar;
+
     // Update the data output buffer
     output->Write();
 

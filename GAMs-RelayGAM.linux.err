@@ -1,0 +1,64 @@
+In file included from ../../BaseLib2/Level1/GCReference.h:38,
+                 from ../../BaseLib2/Level1/GCRTemplate.h:35,
+                 from ../../BaseLib2/Level1/GCReferenceContainer.h:34,
+                 from ../../BaseLib2/Level5/GAM.h:35,
+                 from RelayGAM.h:8,
+                 from RelayGAM.cpp:5:
+../../BaseLib2/Level0/Atomic.h: In static member function ‘static bool Atomic::TestAndSet(volatile int32*)’:
+../../BaseLib2/Level0/Atomic.h:392:20: warning: ISO C++17 does not allow ‘register’ storage class specifier [-Wregister]
+  392 |     register int32 out=1;
+      |                    ^~~
+../../BaseLib2/Level0/Atomic.h: In static member function ‘static bool Atomic::TestAndSet(volatile int16*)’:
+../../BaseLib2/Level0/Atomic.h:448:20: warning: ISO C++17 does not allow ‘register’ storage class specifier [-Wregister]
+  448 |     register int16 out=1;
+      |                    ^~~
+../../BaseLib2/Level0/Atomic.h: In static member function ‘static bool Atomic::TestAndSet(volatile int8*)’:
+../../BaseLib2/Level0/Atomic.h:503:19: warning: ISO C++17 does not allow ‘register’ storage class specifier [-Wregister]
+  503 |     register int8 out=1;
+      |                   ^~~
+In file included from ../../BaseLib2/Level0/ThreadInitialisationInterface.h:33,
+                 from ../../BaseLib2/Level0/Threads.h:35,
+                 from ../../BaseLib2/Level1/ErrorSystemInstructions.h:31,
+                 from ../../BaseLib2/Level1/ObjectRegistryItem.h:34,
+                 from ../../BaseLib2/Level1/Object.h:36,
+                 from ../../BaseLib2/Level1/GarbageCollectable.h:36,
+                 from ../../BaseLib2/Level1/GCReference.h:40:
+../../BaseLib2/Level0/EventSem.h: In member function ‘bool PrivateEventSemStruct::Wait(TimeoutType)’:
+../../BaseLib2/Level0/EventSem.h:109:18: warning: ‘int ftime(timeb*)’ is deprecated: Use gettimeofday or clock_gettime instead [-Wdeprecated-declarations]
+  109 |             ftime( &tb );
+      |             ~~~~~^~~~~~~
+In file included from ../../BaseLib2/Level0/SystemLinux.h:72,
+                 from ../../BaseLib2/Level0/System.h:40,
+                 from ../../BaseLib2/Level0/LinkedListable.h:31,
+                 from ../../BaseLib2/Level1/GCReferenceContainer.h:33:
+/usr/include/x86_64-linux-gnu/sys/timeb.h:29:12: note: declared here
+   29 | extern int ftime (struct timeb *__timebuf)
+      |            ^~~~~
+In file included from ../../BaseLib2/Level1/GCReferenceContainer.h:37:
+../../BaseLib2/Level0/MutexSem.h: In member function ‘bool PrivateMutexSemStruct::Lock(TimeoutType)’:
+../../BaseLib2/Level0/MutexSem.h:79:18: warning: ‘int ftime(timeb*)’ is deprecated: Use gettimeofday or clock_gettime instead [-Wdeprecated-declarations]
+   79 |             ftime( &tb );
+      |             ~~~~~^~~~~~~
+/usr/include/x86_64-linux-gnu/sys/timeb.h:29:12: note: declared here
+   29 | extern int ftime (struct timeb *__timebuf)
+      |            ^~~~~
+RelayGAM.h: In constructor ‘RelayGAM::RelayGAM()’:
+RelayGAM.h:43:9: error: ‘reference’ was not declared in this scope; did you mean ‘GCReference’?
+   43 |         reference                                     = 0.0;
+      |         ^~~~~~~~~
+      |         GCReference
+RelayGAM.cpp: In member function ‘virtual bool RelayGAM::Initialise(ConfigurationDataBase&)’:
+RelayGAM.cpp:74:23: error: ‘reference’ was not declared in this scope; did you mean ‘GCReference’?
+   74 |     if(!cdb.ReadFloat(reference, "reference", 1)){
+      |                       ^~~~~~~~~
+      |                       GCReference
+RelayGAM.cpp: In member function ‘virtual bool RelayGAM::Execute(GAM_FunctionNumbers)’:
+RelayGAM.cpp:103:42: error: ‘reference’ was not declared in this scope; did you mean ‘GCReference’?
+  103 |                 float error            = reference - measure;
+      |                                          ^~~~~~~~~
+      |                                          GCReference
+../../BaseLib2/Level0/EventSem.h: In member function ‘bool PrivateEventSemStruct::Reset()’:
+../../BaseLib2/Level0/EventSem.h:142:5: warning: control reaches end of non-void function [-Wreturn-type]
+  142 |     }
+      |     ^
+make: *** [../../MakeDefaults/MakeStdLibRules.linux:30: linux/RelayGAM.o] Error 1

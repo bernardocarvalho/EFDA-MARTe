@@ -22,7 +22,6 @@
 # $Id: Makefile.inc 3 2012-01-15 16:26:07Z aneto $
 #
 #############################################################
-OBJSX=MinimalGAMClassInfo.sinfo.x
 
 MAKEDEFAULTDIR=../../MakeDefaults
 
@@ -39,7 +38,6 @@ CFLAGS+= -I../../BaseLib2/Level6
 CFLAGS+= -I../../BaseLib2/LoggerService
 
 all: $(OBJS) \
-    MinimalGAMClassInfo.sinfo.cpp\
     $(TARGET)/MinimalGAM$(GAMEXT)
 
 include depends.$(TARGET)

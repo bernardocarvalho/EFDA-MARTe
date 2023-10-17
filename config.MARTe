@@ -30,6 +30,8 @@ DigitalFilterGAM
 #EPICSGAM
 ExpEval
 PIDGAM
+MinimalGAM
+RelayGAM
 PlottingGAM
 StatisticGAM
 StorageGAM
